@@ -1,5 +1,6 @@
 #! /usr/bin/python
 # -*- coding: utf-8 -*-
+
 #-------------------------------------------------------------------------------
 # Name:         outputLilypond.py
 # Purpose:      Outputs music21 Objects into LilyPond Format
