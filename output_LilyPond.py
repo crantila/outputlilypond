@@ -33,34 +33,9 @@ from random import choice as random_choice
 from music21 import note, clef, meter, key, stream, instrument, \
    metadata, layout, bar, humdrum, duration
 from music21.duration import DurationException
-# vis
+# output_LilyPond
 from file_output import file_outputter
-
-
-
-#-------------------------------------------------------------------------------
-class UnidentifiedObjectError( Exception ):
-   '''
-   When something can't be identified.
-   '''
-   def __init__( self, val ):
-      self.value = val
-   def __str__( self ):
-      return repr( self.value )
-#-------------------------------------------------------------------------------
-
-
-
-#-------------------------------------------------------------------------------
-class ImpossibleToProcessError( Exception ):
-   '''
-   When something is identified, but for some reason cannot be processed.
-   '''
-   def __init__( self, val ):
-      self.value = val
-   def __str__( self ):
-      return repr( self.value )
-#-------------------------------------------------------------------------------
+from problems import UnidentifiedObjectError, ImpossibleToProcessError
 
 
 
@@ -325,6 +300,9 @@ def process_measure( the_meas ):
             #post += note_to_lily( obj ) + " "
       # Clef
       elif isinstance( obj, clef.Clef ):
+         if invisible:
+            post += "\\once \\override Staff.Clef #'transparent = ##t\n\t"
+
          if isinstance( obj, clef.TrebleClef ):
             post += "\\clef treble\n\t"
          elif isinstance( obj, clef.BassClef ):
@@ -337,10 +315,16 @@ def process_measure( the_meas ):
             raise UnidentifiedObjectError( 'Clef type not recognized: ' + obj )
       # Time Signature
       elif isinstance( obj, meter.TimeSignature ):
+         if invisible:
+            post += "\\once \\override Staff.TimeSignature #'transparent = ##t\n\t"
+
          post += "\\time " + str(obj.beatCount) + "/" + str(obj.denominator) + "\n\t"
       # Key Signature
       elif isinstance( obj, key.KeySignature ):
          pm = obj.pitchAndMode
+         if invisible:
+            post += "\\once \\override Staff.KeySignature #'transparent = ##t\n\t"
+
          if 2 == len(pm) and pm[1] is not None:
             post += "\\key " + pitch_to_lily( pm[0], include_octave=False ) + " \\" + pm[1] + "\n\t"
          else:
@@ -352,7 +336,7 @@ def process_measure( the_meas ):
          # to happen by themselves. Of course, this will have to change once
          # we have the ability to override the standard barline.
          if 'regular' != obj.style:
-            post += barline_to_lily( obj ) + " "
+            post += '\n\t' + barline_to_lily( obj ) + " "
       # PageLayout and SystemLayout
       elif isinstance( obj, layout.SystemLayout ) or isinstance( obj, layout.PageLayout ):
          # I don't know what to do with these undocumented features.
@@ -762,11 +746,6 @@ if __name__ == '__main__':
 
 
 # TODO: Testing
-# - on a Measure, the .lily_invisible property set to True means that the Staff
-#   should be have no lines for that Measure (as in \stopStaff) and that all
-#   the Note or Rest objects inside should be made into spacing objects ("s")
-#   --> this is in the process_measure() method, and there are lots of things
-#       that need to be confirmed as appearing invisible
 # - whether the "indent" thing from settings is processed
 # - make_lily_triangle() in analytic_engine.py
 # - providing a filename to process_score() actually outputs there

@@ -46,7 +46,7 @@ if __name__ == '__main__':
    unittest.TextTestRunner( verbosity = 1 ).run( t_d_t_l )
    unittest.TextTestRunner( verbosity = 1 ).run( t_n_t_l )
    unittest.TextTestRunner( verbosity = 1 ).run( t_b_t_l )
+   unittest.TextTestRunner( verbosity = 1 ).run( t_p_m )
 
    # Run Integration Tests
-   unittest.TextTestRunner( verbosity = 1 ).run( process_measure_suite )
    unittest.TextTestRunner( verbosity = 1 ).run( process_stream_part_suite )
