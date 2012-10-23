@@ -30,6 +30,7 @@ from subprocess import Popen, PIPE # for running bash things
 from string import letters as string_letters
 from random import choice as random_choice
 from itertools import repeat
+from platform import system as which_os
 # music21
 from music21 import clef, meter, key, stream, metadata, layout, bar, humdrum
 from music21.duration import Duration
@@ -743,13 +744,19 @@ def detect_lilypond():
    # and again different on 32-bit, probably
    # HKLM/SOFTWARE/LilyPond/Install_Dir
 
-   proc = Popen( ['which', 'lilypond'], stdout=PIPE )
-   lily_path = proc.stdout.read()[:-1] # slice gets rid of terminating newline
-   proc = Popen( [lily_path, '--version'], stdout=PIPE )
-   version = proc.stdout.read()
-   lily_verzh = version[version.find('LilyPond') + 9 : version.find('\n') ]
+   if 'Windows' == which_os:
+      # NOTE: this is just a temporary hack that allows vis to load on Windows
+      # computers, but likely without enabling LilyPond supprt
+      return ( 'lilypond.exe', '2.0.0' )
+   else:
+      # On Linux/OS X/Unix systems, we'll assume a "bash" shell and hope it goes
+      proc = Popen( ['which', 'lilypond'], stdout=PIPE )
+      lily_path = proc.stdout.read()[:-1] # remove terminating newline
+      proc = Popen( [lily_path, '--version'], stdout=PIPE )
+      version = proc.stdout.read()
+      lily_verzh = version[version.find('LilyPond') + 9 : version.find('\n') ]
 
-   return ( lily_path, lily_verzh )
+      return ( lily_path, lily_verzh )
 
 
 
