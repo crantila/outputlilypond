@@ -46,8 +46,8 @@ invisibility_1.lily_invisible = True
 
 
 #-------------------------------------------------------------------------------
-# Everything in the Measure should be invisible... we have only one Rest and one
-# TimeSignature
+# Everything in the Measure should be invisible... we have a Rest, a
+# TimeSignature, and a KeySignature
 invisibility_2 = Measure()
 invisibility_2.append( TimeSignature( '4/4' ) )
 invisibility_2.append( KeySignature( 5 ) )
@@ -58,8 +58,8 @@ invisibility_2.lily_invisible = True
 
 
 #-------------------------------------------------------------------------------
-# Everything in the Measure should be invisible... we have only one Rest and one
-# TimeSignature
+# Everything in the Measure should be invisible... we have a Rest, a
+# TimeSignature, a KeySignature, and a Clef
 invisibility_3 = Measure()
 invisibility_3.append( TimeSignature( '4/4' ) )
 invisibility_3.append( KeySignature( 5 ) )

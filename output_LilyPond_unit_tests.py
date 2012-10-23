@@ -433,6 +433,14 @@ class Test_Process_Measure( unittest.TestCase ):
 #-------------------------------------------------------------------------------
 
 
+# Test_Process_Stream():
+# NOTE: to ensure these are "unit tests," they must only test things that rely
+# only on process_stream()... so all the Part or Measure objects or whatever
+# should first of all not exist when possible, and when they must exist, they
+# must not contain many components
+# - whether "indent" works
+# -
+
 
 
 

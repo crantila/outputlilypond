@@ -50,3 +50,9 @@ if __name__ == '__main__':
 
    # Run Integration Tests
    unittest.TextTestRunner( verbosity = 1 ).run( process_stream_part_suite )
+
+# TODO: Testing
+# - providing a filename to process_score() actually outputs there
+# - detect_lilypond() : when it works, and when it doesn't
+# - whether the thing that calls LilyPond actually uses the auto-detected path
+# - update existing tests for whatever stuff I've modified since they worked
