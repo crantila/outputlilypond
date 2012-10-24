@@ -26,7 +26,7 @@ from os.path import exists
 from os import access, W_OK
 import fileinput
 # vis
-from problems import BadFileError
+from LilyPondProblems import BadFileError
 
 
 
