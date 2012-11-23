@@ -269,39 +269,6 @@ class Test_Barline_to_Lily( unittest.TestCase ):
 
 
 #-------------------------------------------------------------------------------
-class Test_Detect_LilyPond( unittest.TestCase ):
-   # detect_lilypond() -------------------------------------
-   def test_for_path( self ):
-      # NB: You have to write in your path and version!
-      my_path = '/usr/bin/lilypond'
-      my_version = '2.16.0'
-      res = LilyPondSettings.detect_lilypond()
-      self.assertEqual( res[0], my_path )
-      self.assertEqual( res[1], my_version )
-
-   # make_lily_version_numbers() ---------------------------
-   def test_make_lily_version_numbers_1( self ):
-      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.14.0' ), (2,14,0) )
-
-   def test_make_lily_version_numbers_2( self ):
-      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.14.2' ), (2,14,2) )
-
-   def test_make_lily_version_numbers_3( self ):
-      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.16.0' ), (2,16,0) )
-
-   def test_make_lily_version_numbers_4( self ):
-      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.15.31' ), (2,15,31) )
-
-   def test_make_lily_version_numbers_5( self ):
-      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '218901289304.1123412344.12897795' ), (218901289304,1123412344,12897795) )
-
-   def test_make_lily_version_numbers_6( self ):
-      self.assertRaises( ValueError, LilyPondSettings.make_lily_version_numbers, '..' )
-#-------------------------------------------------------------------------------
-
-
-
-#-------------------------------------------------------------------------------
 class Test_Process_Measure( unittest.TestCase ):
    def test_modeless_key_signature( self ):
       meas = stream.Measure()
@@ -447,7 +414,6 @@ class Test_Process_Measure( unittest.TestCase ):
 
 
 # Define test suites
-detect_lilypond_suite = unittest.TestLoader().loadTestsFromTestCase( Test_Detect_LilyPond )
 t_o_n_t_l = unittest.TestLoader().loadTestsFromTestCase( Test_Octave_Num_to_Lily )
 t_p_t_l = unittest.TestLoader().loadTestsFromTestCase( Test_Pitch_to_Lily )
 t_d_t_l = unittest.TestLoader().loadTestsFromTestCase( Test_Duration_to_Lily )

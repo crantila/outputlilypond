@@ -79,7 +79,7 @@ class LilyPondSettings:
 
    def set_property( self, setting_name, setting_value ):
       '''
-      Modify the value of a setting.
+      Modify the value of an existing setting.
 
       >>> from output_LilyPond import *
       >>> the_settings = LilyPond_Settings()
@@ -87,11 +87,20 @@ class LilyPondSettings:
       >>> the_settings.get_property( 'indent' )
       '4\mm'
       '''
+
+      # If the setting doesn't already exist, this will trigger a KeyError
+      self._secret_settings[setting_name]
+
+      # And if we're still going, it means we can set this setting
       self._secret_settings[setting_name] = setting_value
 
 
 
    def get_property( self, setting_name ):
+      '''
+      Returns the value assigned to a property. If the inputted string does not
+      correspond to an existing property name, this method raises a KeyError.
+      '''
       return self._secret_settings[setting_name]
 
 

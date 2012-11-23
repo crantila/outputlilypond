@@ -25,6 +25,8 @@
 
 # Confirmed Requirements:
 import unittest
+from OutputLilyPondTests.TestSettings import test_settings_suite, \
+   detect_lilypond_suite
 from old_unit_tests import *
 from old_integration_tests import *
 
@@ -39,8 +41,12 @@ if __name__ == '__main__':
    print( "###############################################################################" )
    print( "" )
 
-   # Unit Tests
+   # New Tests ---------------------------------------------
+   unittest.TextTestRunner(verbosity=1).run(test_settings_suite)
    unittest.TextTestRunner( verbosity = 1 ).run( detect_lilypond_suite )
+
+   # Old Tests ---------------------------------------------
+   # Unit Tests
    unittest.TextTestRunner( verbosity = 1 ).run( t_o_n_t_l )
    unittest.TextTestRunner( verbosity = 1 ).run( t_p_t_l )
    unittest.TextTestRunner( verbosity = 1 ).run( t_d_t_l )

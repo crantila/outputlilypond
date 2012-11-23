@@ -22,128 +22,147 @@
 #-------------------------------------------------------------------------------
 
 import unittest
-from VISSettings import VISSettings
-from problems import NonsensicalInputWarning
+from LilyPondSettings import LilyPondSettings
 
 #-------------------------------------------------------------------------------
 class TestSettings( unittest.TestCase ):
-   def setUp( self ):
-      self.s = VISSettings()
+   def setUp(self):
+      self.s = LilyPondSettings()
 
-   def test_default_init( self ):
+   def test_default_init(self):
       # Ensure all the settings are initialized to the proper default value.
-      self.assertEqual( self.s._secret_settings_hash['produceLabeledScore'], False )
-      self.assertEqual( self.s._secret_settings_hash['heedQuality'], False )
-      self.assertEqual( self.s._secret_settings_hash['lookForTheseNs'], [2] )
-      self.assertEqual( self.s._secret_settings_hash['offsetBetweenInterval'], 0.5 )
-      self.assertEqual( self.s._secret_settings_hash['outputResultsToFile'], '' )
-      self.assertEqual( self.s._secret_settings_hash['simpleOrCompound'], 'compound' )
+      # These must be removed in a later version, once the new class structure
+      # is implemented.
+      self.assertEqual(self.s._parts_in_this_score, [])
+      self.assertEqual(self.s._analysis_notation_parts, [])
+      # These will probably remain
+      self.assertEqual(self.s._secret_settings['bar numbers'], None)
+      self.assertEqual(self.s._secret_settings['tagline'], '')
+      self.assertEqual(self.s._secret_settings['indent'], None)
+      self.assertEqual(self.s._secret_settings['print_instrument_names'], True)
+      self.assertEqual(self.s._secret_settings['paper_size'], 'letter')
+      self.assertEqual(self.s._secret_settings['lilypond_path'], '/usr/bin/lilypond')
+      self.assertEqual(self.s._secret_settings['lilypond_version'], '2.16.0')
+      self.assertEqual(self.s._secret_settings['lilypond_version_numbers'], (2, 16, 0))
 
-   def test_set_property_1( self ):
-      # Setting something to a new, valid value is done properly.
-      self.s.set_property( 'set produceLabelledScore True' )
-      self.assertEqual( self.s._secret_settings_hash['produceLabeledScore'], True )
-      self.s.set_property( 'produceLabelledScore False' )
-      self.assertEqual( self.s._secret_settings_hash['produceLabeledScore'], False )
+   # "set"
+   def test_set_property_1(self):
+      self.s.set_property('bar numbers', 12)
+      self.assertEqual(self.s._secret_settings['bar numbers'], 12)
 
-   def test_set_property_2( self ):
-      # Invalid settings
-      self.assertRaises( NonsensicalInputWarning, self.s.set_property, 'four score and five score' )
-      self.assertRaises( NonsensicalInputWarning, self.s.set_property, 'fourscoreandfivescore' )
-      self.assertRaises( NonsensicalInputWarning, self.s.set_property, '' )
+   def test_set_property_2(self):
+      self.s.set_property('tagline', 12)
+      self.assertEqual(self.s._secret_settings['tagline'], 12)
 
-   def test_set_property_3( self ):
-      # Invalid value
-      self.assertRaises( NonsensicalInputWarning, self.s.set_property, 'set produceLabeledScore five score' )
-      self.assertRaises( NonsensicalInputWarning, self.s.set_property, 'produceLabeledScore five score' )
+   def test_set_property_3(self):
+      self.s.set_property('indent', 12)
+      self.assertEqual(self.s._secret_settings['indent'], 12)
 
-   def test_set_property_4( self ):
-      # Ensure offsetBetweenInterval is done correctly.
-      self.s.set_property( 'offsetBetweenInterval 0.6' )
-      self.assertEqual( self.s._secret_settings_hash['offsetBetweenInterval'], 0.6 )
-      self.assertRaises( NonsensicalInputWarning, self.s.set_property, 'offsetBetweenInterval pointfive' )
+   def test_set_property_4(self):
+      self.s.set_property('print_instrument_names', 12)
+      self.assertEqual(self.s._secret_settings['print_instrument_names'], 12)
 
-   def test_set_property_5A( self ):
-      # Ensure outputResultsToFile is done correctly.
-      self.s.set_property( 'outputResultsToFile /path/to/file' )
-      self.assertEqual( self.s._secret_settings_hash['outputResultsToFile'], '/path/to/file' )
+   def test_set_property_5(self):
+      self.s.set_property('paper_size', 12)
+      self.assertEqual(self.s._secret_settings['paper_size'], 12)
 
-   def test_set_property_5B( self ):
-      # Ensure outputResultsToFile is done correctly.
-      self.s.set_property( 'outputResultsToFile None' )
-      self.assertEqual( self.s._secret_settings_hash['outputResultsToFile'], '' )
+   def test_set_property_6(self):
+      self.s.set_property('lilypond_path', 12)
+      self.assertEqual(self.s._secret_settings['lilypond_path'], 12)
 
-   def test_get_property_1( self ):
-      # Valid settings
-      self.assertEqual( self.s.get_property( 'produceLabeledScore' ), False )
-      self.s._secret_settings_hash['produceLabeledScore'] = True
-      self.assertEqual( self.s.get_property( 'produceLabeledScore' ), True )
-      self.assertEqual( self.s.get_property( 'produceLabelledScore' ), True )
+   def test_set_property_7(self):
+      self.s.set_property('lilypond_version', 12)
+      self.assertEqual(self.s._secret_settings['lilypond_version'], 12)
 
-   def test_get_property_2( self ):
-      # Invalid settings
-      self.assertRaises( NonsensicalInputWarning, self.s.get_property, 'four score and five score' )
-      self.assertRaises( NonsensicalInputWarning, self.s.get_property, 'four' )
-      self.assertRaises( NonsensicalInputWarning, self.s.get_property, '' )
+   def test_set_property_8(self):
+      self.s.set_property('lilypond_version_numbers', 12)
+      self.assertEqual(self.s._secret_settings['lilypond_version_numbers'], 12)
 
-   def test_n_parser( self ):
-      # For the method _parse_list_of_n() which is called when users set the
-      # "lookForTheseNs" property.
-      self.assertEqual( VISSettings._parse_list_of_n( '1, 2, 3, 4, 5' ), \
-                        [1, 2, 3, 4, 5] )
-      self.assertEqual( VISSettings._parse_list_of_n( '[1,2,3,4,5]' ), \
-                        [1, 2, 3, 4, 5] )
-      self.assertEqual( VISSettings._parse_list_of_n( '[1, 2, 3, 4, 5]' ), \
-                        [1, 2, 3, 4, 5] )
-      self.assertEqual( VISSettings._parse_list_of_n( '[3, 2, 1, 4, 5]' ), \
-                        [1, 2, 3, 4, 5] )
-      self.assertEqual( VISSettings._parse_list_of_n( '[1, 3, 3, 2, 1]' ), \
-                        [1, 2, 3] )
-      self.assertEqual( VISSettings._parse_list_of_n( '8, 9, 10' ), \
-                        [8, 9, 10] )
-      self.assertEqual( VISSettings._parse_list_of_n( '8-:!9nanana10' ), \
-                        [8, 9, 10] )
-      self.assertEqual( VISSettings._parse_list_of_n( '42 6  12   ' ), \
-                        [6, 12, 42] )
-      self.assertEqual( VISSettings._parse_list_of_n( '6278 9180 1019 2, 1123' ), \
-                        [2, 1019, 1123, 6278, 9180] )
+   # "get"
+   def test_get_property_1(self):
+      self.s._secret_settings['bar numbers'] = 12
+      self.assertEqual(self.s.get_property('bar numbers'), 12)
 
-   def test_export_settings( self ):
-      actual = self.s.export_settings()
-      # We can't guarantee the order in which the settings are printed, so we
-      # have to use this less-good style of checking until I think of something.
-      self.assertTrue( 'produceLabeledScore: False' in actual )
-      self.assertTrue( 'heedQuality: False' in actual )
-      self.assertTrue( 'lookForTheseNs: [2]' in actual )
-      self.assertTrue( 'offsetBetweenInterval: 0.5' in actual )
-      self.assertTrue( 'outputResultsToFile: ' in actual )
+   def test_get_property_2(self):
+      self.s._secret_settings['tagline'] = 12
+      self.assertEqual(self.s.get_property('tagline'), 12)
 
-   def test_import_settings_1( self ):
-      # For the first one, just set most things to their default values,
-      # nothing difficult.
-      set_str = 'produceLabeledScore: True\nheedQuality: True\nlookForTheseNs: [3]\noffsetBetweenInterval: 0.6\noutputResultsToFile: '
-      self.s.import_settings( set_str )
-      # Ensure all the settings are initialized to the proper default value.
-      self.assertEqual( self.s._secret_settings_hash['produceLabeledScore'], True )
-      self.assertEqual( self.s._secret_settings_hash['heedQuality'], True )
-      self.assertEqual( self.s._secret_settings_hash['lookForTheseNs'], [3] )
-      self.assertEqual( self.s._secret_settings_hash['offsetBetweenInterval'], 0.6 )
-      self.assertEqual( self.s._secret_settings_hash['outputResultsToFile'], '' )
+   def test_get_property_3(self):
+      self.s._secret_settings['indent'] = 12
+      self.assertEqual(self.s.get_property('indent'), 12)
 
-   #def test_import_settings_2( self ):
-      ## More complicated stuff
-      #set_str = ' produceLabeledScore:   True       \n   \n \n   heedQuality:    True\nlookForTheseNs: 2 and 4\n\noffsetBetweenInterval   :0.125   \n   outputResultsToFile: /home/christo/output.txt    \n \n   \n    '
-      #self.s.import_settings( set_str )
-      ## Ensure all the settings are initialized to the proper default value.
-      #self.assertEqual( self.s._secret_settings_hash['produceLabeledScore'], True )
-      #self.assertEqual( self.s._secret_settings_hash['heedQuality'], True )
-      #self.assertEqual( self.s._secret_settings_hash['lookForTheseNs'], [2,4] )
-      #self.assertEqual( self.s._secret_settings_hash['offsetBetweenInterval'], 0.125 )
-      #self.assertEqual( self.s._secret_settings_hash['outputResultsToFile'], '/home/christo/output.txt' )
+   def test_get_property_4(self):
+      self.s._secret_settings['print_instrument_names'] = 12
+      self.assertEqual(self.s.get_property('print_instrument_names'), 12)
+
+   def test_get_property_5(self):
+      self.s._secret_settings['paper_size'] = 12
+      self.assertEqual(self.s.get_property('paper_size'), 12)
+
+   def test_get_property_6(self):
+      self.s._secret_settings['lilypond_path'] = 12
+      self.assertEqual(self.s.get_property('lilypond_path'), 12)
+
+   def test_get_property_7(self):
+      self.s._secret_settings['lilypond_version'] = 12
+      self.assertEqual(self.s.get_property('lilypond_version'), 12)
+
+   def test_get_property_8(self):
+      self.s._secret_settings['lilypond_version_numbers'] = 12
+      self.assertEqual(self.s.get_property('lilypond_version_numbers'), 12)
+
+   # error "set"
+   def test_set_error_1(self):
+      self.assertRaises(KeyError, self.s.set_property, 'bananas', 12)
+
+   def test_set_error_2(self):
+      self.assertRaises(KeyError, self.s.set_property, 42, 12)
+
+   # error "get"
+   def test_get_error_1(self):
+      self.assertRaises(KeyError, self.s.get_property, 'bananas')
+
+   def test_get_error_2(self):
+      self.assertRaises(KeyError, self.s.get_property, 42)
+#-------------------------------------------------------------------------------
+
+
 
 #-------------------------------------------------------------------------------
+class Test_Detect_LilyPond( unittest.TestCase ):
+   # detect_lilypond() -------------------------------------
+   def test_for_path( self ):
+      # NB: You have to write in your path and version!
+      my_path = '/usr/bin/lilypond'
+      my_version = '2.16.0'
+      res = LilyPondSettings.detect_lilypond()
+      self.assertEqual( res[0], my_path )
+      self.assertEqual( res[1], my_version )
+
+   # make_lily_version_numbers() ---------------------------
+   def test_make_lily_version_numbers_1( self ):
+      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.14.0' ), (2,14,0) )
+
+   def test_make_lily_version_numbers_2( self ):
+      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.14.2' ), (2,14,2) )
+
+   def test_make_lily_version_numbers_3( self ):
+      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.16.0' ), (2,16,0) )
+
+   def test_make_lily_version_numbers_4( self ):
+      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.15.31' ), (2,15,31) )
+
+   def test_make_lily_version_numbers_5( self ):
+      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '218901289304.1123412344.12897795' ), (218901289304,1123412344,12897795) )
+
+   def test_make_lily_version_numbers_6( self ):
+      self.assertRaises( ValueError, LilyPondSettings.make_lily_version_numbers, '..' )
+#-------------------------------------------------------------------------------
+
+
 
 #-------------------------------------------------------------------------------
 # Definitions
 #-------------------------------------------------------------------------------
-suite = unittest.TestLoader().loadTestsFromTestCase( TestSettings )
+test_settings_suite = unittest.TestLoader().loadTestsFromTestCase( TestSettings )
+detect_lilypond_suite = unittest.TestLoader().loadTestsFromTestCase( Test_Detect_LilyPond )
