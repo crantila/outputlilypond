@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Name:         output_LilyPond.py
+# Name:         OutputLilyPond.py
 # Purpose:      Outputs music21 Objects into LilyPond Format
 #
 # Copyright (C) 2012 Christopher Antila
@@ -21,10 +21,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 '''
-The output_LilyPond module converts music21 objects into a LilyPond notation
+The OutputLilyPond module converts music21 objects into a LilyPond notation
 file, then tries to run LilyPond to convert that into a PDF score.
 
-output_LilyPond is a python library that uses music21; it's intended for use
+OutputLilyPond is a python library that uses music21; it's intended for use
 with music research software.
 '''
 
@@ -45,7 +45,7 @@ from music21.duration import Duration
 from music21.note import Note, Rest
 from music21.instrument import Instrument
 # output_LilyPond
-from file_output import file_outputter
+from FileOutput import file_outputter
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
 
 
