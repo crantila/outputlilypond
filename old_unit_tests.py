@@ -22,7 +22,7 @@
 #-------------------------------------------------------------------------------
 
 import unittest
-from output_LilyPond import *
+from OutputLilyPond import *
 from music21 import note, pitch, duration, converter, tie, key
 from test_corpus import process_measure_unit
 
@@ -275,28 +275,28 @@ class Test_Detect_LilyPond( unittest.TestCase ):
       # NB: You have to write in your path and version!
       my_path = '/usr/bin/lilypond'
       my_version = '2.16.0'
-      res = detect_lilypond()
+      res = LilyPondSettings.detect_lilypond()
       self.assertEqual( res[0], my_path )
       self.assertEqual( res[1], my_version )
 
    # make_lily_version_numbers() ---------------------------
    def test_make_lily_version_numbers_1( self ):
-      self.assertEqual( make_lily_version_numbers( '2.14.0' ), (2,14,0) )
+      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.14.0' ), (2,14,0) )
 
    def test_make_lily_version_numbers_2( self ):
-      self.assertEqual( make_lily_version_numbers( '2.14.2' ), (2,14,2) )
+      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.14.2' ), (2,14,2) )
 
    def test_make_lily_version_numbers_3( self ):
-      self.assertEqual( make_lily_version_numbers( '2.16.0' ), (2,16,0) )
+      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.16.0' ), (2,16,0) )
 
    def test_make_lily_version_numbers_4( self ):
-      self.assertEqual( make_lily_version_numbers( '2.15.31' ), (2,15,31) )
+      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '2.15.31' ), (2,15,31) )
 
    def test_make_lily_version_numbers_5( self ):
-      self.assertEqual( make_lily_version_numbers( '218901289304.1123412344.12897795' ), (218901289304,1123412344,12897795) )
+      self.assertEqual( LilyPondSettings.make_lily_version_numbers( '218901289304.1123412344.12897795' ), (218901289304,1123412344,12897795) )
 
    def test_make_lily_version_numbers_6( self ):
-      self.assertRaises( ValueError, make_lily_version_numbers, '..' )
+      self.assertRaises( ValueError, LilyPondSettings.make_lily_version_numbers, '..' )
 #-------------------------------------------------------------------------------
 
 

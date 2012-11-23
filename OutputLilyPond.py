@@ -36,7 +36,6 @@ import os # needed for writing the output file
 from subprocess import Popen, PIPE # for running bash things
 from string import letters as string_letters
 from random import choice as random_choice
-from platform import system as which_os
 from itertools import repeat
 # music21
 from music21 import clef, meter, key, stream, metadata, layout, bar, humdrum, \
@@ -47,6 +46,7 @@ from music21.instrument import Instrument
 # output_LilyPond
 from FileOutput import file_outputter
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
+from LilyPondSettings import LilyPondSettings
 
 
 
@@ -446,7 +446,7 @@ def process_stream( the_stream, the_settings ):
    - metadata.Metadata
    - layout.StaffGroup
 
-   The second argument is a LilyPond_Settings object.
+   The second argument is a LilyPondSettings object.
 
    Note that if a stream.Part has the attribute 'lily_analysis_voice' and it is
    set to True, then all Note objects will be turned into spacer objects that
@@ -655,71 +655,6 @@ def process_stream( the_stream, the_settings ):
 
 
 
-#------------------------------------------------------------------------------
-class LilyPond_Settings:
-   '''
-   Holds the settings relevant to output formatting of a LilyPond file.
-
-   List of Settings:
-   - bar_numbers : print bar numbers on 'every' bar, the start of every 'system'
-      or 'never'
-   - tagline : either 'default' ("Music engraving my LilyPond...") or a str
-      that is what you want the tagline to be.
-   - indent : either 'default' or a str that is the indentation you want (like
-      "0\cm" for example)
-   - print_instrument_names : True or False whether to print instrument names
-   - lilypond_version : a str that contains the LilyPond version (default is
-      auto-detection of whatever's installed)
-   - lilypond_path : a str that is the full path to the LilyPond executable
-   '''
-
-   def __init__( self ):
-      # TODO: re-implmement all of the properties as str in _secret_settings
-      # Hold a list of the part names in this Score
-      self._parts_in_this_score = []
-      # Hold a list of the parts that should be written with the
-      # VisAnnotation context.
-      self._analysis_notation_parts = []
-      # Hold the other settings for this Score
-      self._secret_settings = {}
-      # Establish default values for settings in this Score
-      # TODO: test this; it's in the "Part" section of process_stream()
-      self._secret_settings['bar numbers'] = None
-      self._secret_settings['tagline'] = ''
-         # empty string means "default tagline"
-         # None means "no tagline"
-      self._secret_settings['indent'] = None # TODO: test this
-      self._secret_settings['print_instrument_names'] = True # TODO: implement
-      self._secret_settings['paper_size'] = 'letter'
-      # Deal with the LilyPond path and version
-      res = detect_lilypond()
-      self._secret_settings['lilypond_path'] = res[0]
-      self._secret_settings['lilypond_version'] = res[1]
-      self._secret_settings['lilypond_version_numbers'] = \
-         make_lily_version_numbers( res[1] )
-
-
-
-   def set_property( self, setting_name, setting_value ):
-      '''
-      Modify the value of a setting.
-
-      >>> from output_LilyPond import *
-      >>> the_settings = LilyPond_Settings()
-      >>> the_settings.set_property( 'indent', '4\mm' )
-      >>> the_settings.get_property( 'indent' )
-      '4\mm'
-      '''
-      self._secret_settings[setting_name] = setting_value
-
-
-
-   def get_property( self, setting_name ):
-      return self._secret_settings[setting_name]
-# End Class LilyPond_Settings() -----------------------------------------------
-
-
-
 def output_the_file( contents, filename='test_output/lily_output' ):
    '''
    Outputs the file.
@@ -746,7 +681,7 @@ def output_the_file( contents, filename='test_output/lily_output' ):
 def run_lilypond( filename, the_settings ):
    '''
    Arguments should be a str that is the file name followed by a
-   LilyPond_Settings object.
+   LilyPondSettings object.
    '''
 
    # Make the PDF filename: if "filename" ends with ".ly" then remove it so
@@ -767,12 +702,12 @@ def process_score( the_score, the_settings=None, \
                    filename='test_output/lily_output.ly' ):
    '''
    Use this method to output an entire Score object. The second argument is
-   an optional LilyPond_Settings object. The third argument is an optional
+   an optional LilyPondSettings object. The third argument is an optional
    filename.
    '''
 
    if the_settings is None:
-      the_settings = LilyPond_Settings()
+      the_settings = LilyPondSettings()
 
    score_to_write = process_stream( the_score, the_settings )
    output_result = output_the_file( score_to_write, filename )
@@ -781,52 +716,6 @@ def process_score( the_score, the_settings=None, \
       raise IOError( 'Could not output file ' + output_result[1] )
    else:
       run_lilypond( output_result[0], the_settings )
-
-
-
-def detect_lilypond():
-   '''
-   Determine the path to LilyPond and its version.
-
-   Returns a 2-tuple with two str objects:
-   - the full path of the LilyPond executable
-   - the version reported by that executable
-   '''
-
-   # NB: On Windows, use registry key to find path...
-   # HKLM/SOFTWARE/Wow6432Node/LilyPond/Install_Dir
-   # and again different on 32-bit, probably
-   # HKLM/SOFTWARE/LilyPond/Install_Dir
-
-   if 'Windows' == which_os():
-      # NOTE: this is just a temporary hack that allows vis to load on Windows
-      # computers, but likely without enabling LilyPond supprt
-      return ( 'lilypond.exe', '2.0.0' )
-   else:
-      # On Linux/OS X/Unix systems, we'll assume a "bash" shell and hope it goes
-      proc = Popen( ['which', 'lilypond'], stdout=PIPE )
-      lily_path = proc.stdout.read()[:-1] # remove terminating newline
-      proc = Popen( [lily_path, '--version'], stdout=PIPE )
-      version = proc.stdout.read()
-      lily_verzh = version[version.find('LilyPond') + 9 : version.find('\n') ]
-
-      return ( lily_path, lily_verzh )
-
-
-
-def make_lily_version_numbers( version_str ):
-   '''
-   Take a str with three integers separated by the '.' character and returns
-   a 3-tuplet with the integers.
-   '''
-
-   major = int(version_str[:version_str.find('.')])
-   version_str = version_str[version_str.find('.')+1:]
-   minor = int(version_str[:version_str.find('.')])
-   version_str = version_str[version_str.find('.')+1:]
-   revision = int(version_str)
-
-   return ( major, minor, revision )
 
 
 

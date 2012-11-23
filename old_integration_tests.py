@@ -23,7 +23,8 @@
 
 # Confirmed Requirements:
 import unittest
-from output_LilyPond import *
+from OutputLilyPond import *
+from LilyPondSettings import LilyPondSettings
 from music21 import note, pitch, duration, converter, tie, key
 
 
@@ -34,7 +35,7 @@ class Test_Process_Stream_Part( unittest.TestCase ):
    # randomness involved in part names.
    def test_first_measures_of_bach( self ):
       # first two measures of soprano part
-      the_settings = LilyPond_Settings()
+      the_settings = LilyPondSettings()
       the_score = converter.parse( 'test_corpus/bwv77.mxl' )
       actual = process_stream( the_score[1][:3], the_settings )
       actual = actual[8:] # remove the randomized part name
@@ -56,7 +57,7 @@ class Test_Process_Stream_Part( unittest.TestCase ):
 
    def test_first_measures_of_Josquin( self ):
       # first three measures of highest part
-      the_settings = LilyPond_Settings()
+      the_settings = LilyPondSettings()
       the_score = converter.parse( 'test_corpus/Jos2308.krn' )
       actual = process_stream( the_score[0][:10], the_settings )
       actual = actual[8:] # remove the randomized part name

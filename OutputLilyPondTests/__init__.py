@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Name:         __init__.py for OutputLilyPond
-# Purpose:      Imports OutputLilyPond for a client program
+# Name:         __init__.py for OutputLilyPondTests
+# Purpose:      Imports OutputLilyPondTests for a client program
 #
 # Copyright (C) 2012 Christopher Antila
 #
@@ -21,8 +21,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 '''
-Imports everything needed to use the OutputLilyPond module in a client program.
+Imports everything needed to use the OutputLilyPondTests module in a client
+program.
 '''
 
-print( 'output_LilyPond is a music21-based library for music analysis.' )
-print( '\nYou cannot use this program independently of an analysis program.' )
+pass
