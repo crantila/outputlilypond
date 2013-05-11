@@ -20,34 +20,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-'''
+"""
 The LilyPondProblems module contains error and warning classes for the
 output_LilyPond program.
-'''
+"""
 
 
 class BadFileError( Exception ):
-   '''
-   output_LilyPond uses this error when there is a problem loading or handling
-   a file, not related to a more specific musical element.
-   '''
-
-   pass
-
-
+    """
+    output_LilyPond uses this error when there is a problem loading or handling
+    a file, not related to a more specific musical element.
+    """
+    pass
 
 class UnidentifiedObjectError( Exception ):
-   '''
-   When something can't be identified.
-   '''
-
-   pass
-
-
+    """
+    When something can't be identified.
+    """
+    pass
 
 class ImpossibleToProcessError( Exception ):
-   '''
-   When something is identified, but for some reason cannot be processed.
-   '''
-
-   pass
+    """
+    When something is identified, but for some reason cannot be processed.
+    """
+    pass
