@@ -306,6 +306,8 @@ def _process_stream(the_stream, the_settings):
     the_stream : music21.metadata.Metadata
     the_stream : music21.layout.StaffGroup
     the_stream : music21.humdrum.spineParser.MiscTandem
+    the_stream : music21.humdrum.spineParser.SpineComment
+    the_stream : music21.humdrum.spineParser.GlobalComment
         The object to convert to its LilyPond syntax. If a Part has the "lily_analysis_voice"
         attribute, and it is True, then all Note objects will be turned into spacer objects that
         may contain an annotation, and all Rest objects will be turned into spacer objects without
@@ -341,10 +343,19 @@ def _process_stream(the_stream, the_settings):
         # Is there really nothing we can use this for? Seems like these exist only to help
         # the music21 developers.
         return ''
+    elif isinstance(the_stream, humdrum.spineParser.GlobalReference):
+        # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
+        # These objects have lots of metadata, so they'd be pretty useful!
+        return ''
+    elif isinstance(the_stream, humdrum.spineParser.GlobalComment):
+        # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
+        # These objects have lots of metadata, so they'd be pretty useful!
+        return ''
     else:
         # Anything else, we don't know what it is!
-        msg = 'Unknown object in Stream: '
-        raise UnidentifiedObjectError(msg + unicode(the_stream))
+        msg = u'Unknown object in Stream: ' + unicode(the_stream)
+        print(msg)  # DEBUG
+        #raise UnidentifiedObjectError(msg)
 
 
 def _run_lilypond(filename, the_settings):
@@ -506,12 +517,11 @@ class MeasureMaker(LilyPondObjectMaker):
                     rounded_duration = Duration(round(self._as_m21.duration.quarterLength, 2))
                     post += u"\\partial " + _duration_to_lily(rounded_duration) + u"\n\t"
 
-        # Make self._as_m21 an iterable, so we can pull in multiple elements when we
-        # need to deal with tuplets.
-        self._as_m21 = iter(self._as_m21)
-
-        # now fill in all the stuff
-        for obj in self._as_m21:
+        # Make self._as_m21 an iterable, so we can pull in multiple elements when we need to deal
+        # with tuplets.
+        bar_iter = iter(self._as_m21)
+        # And fill in all the stuff
+        for obj in bar_iter:
             # Note or Rest
             if isinstance(obj, note.Note) or isinstance(obj, note.Rest):
                 # TODO: is there a situation where I'll ever need to deal with
@@ -520,7 +530,7 @@ class MeasureMaker(LilyPondObjectMaker):
 
                 # Is it a full-measure rest?
                 if isinstance(obj, note.Rest) and \
-                self._as_m21.srcStream.barDuration.quarterLength == obj.quarterLength:
+                bar_iter.srcStream.barDuration.quarterLength == obj.quarterLength:
                     if invisible:
                         post += u's' + _duration_to_lily(obj.duration) + u' '
                     else:
@@ -534,7 +544,7 @@ class MeasureMaker(LilyPondObjectMaker):
                         NoteMaker(obj, True).get_lilypond() + u" "
                     # For every tuplet component...
                     for _ in repeat(None, number_of_tuplet_components - 1):
-                        post += NoteMaker(next(self._as_m21), True).get_lilypond() + u' '
+                        post += NoteMaker(next(bar_iter), True).get_lilypond() + u' '
                     post += u'} '
                 # It's just a regular note or rest
                 else:
@@ -555,7 +565,15 @@ class MeasureMaker(LilyPondObjectMaker):
                 if invisible:
                     post += u"\\once \\override Staff.Clef #'transparent = ##t\n\t"
 
-                if isinstance(obj, clef.TrebleClef):
+                if isinstance(obj, clef.Treble8vbClef):
+                    post += u"\\clef \"treble_8\"\n\t"
+                elif isinstance(obj, clef.Treble8vaClef):
+                    post += u"\\clef \"treble^8\"\n\t"
+                elif isinstance(obj, clef.Bass8vbClef):
+                    post += u"\\clef \"bass_8\"\n\t"
+                elif isinstance(obj, clef.Bass8vaClef):
+                    post += u"\\clef \"bass^8\"\n\t"
+                elif isinstance(obj, clef.TrebleClef):
                     post += u"\\clef treble\n\t"
                 elif isinstance(obj, clef.BassClef):
                     post += u"\\clef bass\n\t"
@@ -603,9 +621,17 @@ class MeasureMaker(LilyPondObjectMaker):
                 # Is there really nothing we can use this for? Seems like these
                 # exist only to help music21 developers.
                 pass
+            elif isinstance(obj, humdrum.spineParser.SpineComment):
+                # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
+                # These contain at least part names, and maybe also other interesting metadata(?)
+                pass
             # We don't know what it is, and should probably figure out!
             else:
-                raise UnidentifiedObjectError('Unknown object in Bar: ' + unicode(obj))
+                msg = 'Unknown object in Measure ' + unicode(self._as_m21.number) + ': ' + \
+                    unicode(obj)
+                print(msg)  # DEBUG
+                print('   its type is ' + unicode(type(obj)))  # DEBUG
+                #raise UnidentifiedObjectError(msg)
 
         # Append a bar-check symbol, if there was anything outputted.
         if len(post) > 1:
@@ -866,7 +892,12 @@ class ScoreMaker(LilyPondObjectMaker):
         list_of_parts = []
         # Go through the possible parts and see what we find.
         for possible_part in self._as_m21:
-            list_of_parts.append(_process_stream(possible_part, self._setts) + u"\n")
+            the_part_ly = _process_stream(possible_part, self._setts)
+            # If _process_stream() can't deal with the object type, it returns None
+            if the_part_ly is not None:
+                list_of_parts.append(the_part_ly + u"\n")
+            #else:
+                #print('--> "None" from _process_stream() for ' + str(possible_part))  # DEBUG
         # Append the parts to the score we're building. In the future, it'll
         # be important to re-arrange the parts if necessary, or maybe to filter
         # things, so we'll keep everything in this supposedly efficient loop.
