@@ -30,29 +30,26 @@ with music research software.
 
 ## Imports
 # python standard library
-#import os # needed for writing the output file
-#from subprocess import Popen, PIPE # for running bash things
-#from string import letters as string_letters
-#from random import choice as random_choice
+from subprocess import Popen, PIPE  # for running bash things
+import random
 from itertools import repeat
 # music21
 from music21 import clef
 from music21 import meter
 from music21 import key
-#from music21 import stream
-#from music21 import metadata
+from music21 import stream
+from music21 import metadata
 from music21 import layout
 from music21 import bar
 from music21 import humdrum
-#from music21 import tempo
+from music21 import tempo
 from music21 import note
+from music21 import instrument
 from music21.duration import Duration
-#from music21.note import Note, Rest
-#from music21.instrument import Instrument
 # output_LilyPond
-#from FileOutput import file_outputter
+from FileOutput import file_outputter
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
-#from LilyPondSettings import LilyPondSettings
+from LilyPondSettings import LilyPondSettings
 
 
 class LilyPondObjectMaker(object):
@@ -110,6 +107,18 @@ class LilyPondObjectMaker(object):
         return self._as_m21
 
 
+def _string_of_n_letters(n):
+    """
+    Generate a string of n pseudo-random letters.
+
+    This function is currently used to help create unique part names in scores.
+    """
+    post = u''
+    for _ in repeat(None, n):
+        post += random.choice(u'qwertyuiopasdfghjklzxcvbnm')
+    return post
+
+
 def _barline_to_lily(barline):
     """
     Generate the LilyPond-format notation for a music21.bar.Barline object.
@@ -132,14 +141,14 @@ def _barline_to_lily(barline):
     # barStyleList = ['regular', 'dotted', 'dashed', 'heavy', 'double', 'final',
     #               'heavy-light', 'heavy-heavy', 'tick', 'short', 'none']
 
-    dictionary_of_barlines = {'regular': "|", 'dotted': ":", 'dashed': "dashed",
-        'heavy': "|.|", 'double': "||", 'final': "|.", 'heavy-light': ".|",
-        'heavy-heavy': ".|.", 'tick': "'", 'short': "'", 'none': ""}
+    dictionary_of_barlines = {'regular': u"|", 'dotted': u":", 'dashed': u"dashed",
+        'heavy': u"|.|", 'double': u"||", 'final': u"|.", 'heavy-light': u".|",
+        'heavy-heavy': u".|.", 'tick': u"'", 'short': u"'", 'none': u""}
 
-    post = '\\bar "'
+    post = u'\\bar "'
 
     if barline.style in dictionary_of_barlines:
-        post += dictionary_of_barlines[barline.style] + '"'
+        post += dictionary_of_barlines[barline.style] + u'"'
         return post
     else:
         start_msg = 'Barline type not recognized ('
@@ -174,8 +183,8 @@ def _duration_to_lily(dur, known_tuplet=False):
         if len(dur.components) > 1:
             # We have multiple components
             raise ImpossibleToProcessError('Cannot process durations with ' +
-                'multiple components (received ' + str(dur.components) +
-                ' for quarterLength of ' + str(dur.quarterLength) + ')')
+                'multiple components (received ' + unicode(dur.components) +
+                ' for quarterLength of ' + unicode(dur.quarterLength) + ')')
         elif known_tuplet:
             # We have part of a tuple. This isn't necessarily a problem; we'll
             # assume we are given this by process_measure() and that it knows
@@ -190,8 +199,8 @@ def _duration_to_lily(dur, known_tuplet=False):
     # We need both a list of our potential durations and a dictionary of what
     # they mean in LilyPond terms.
     list_of_durations = [16.0, 8.0, 4.0, 2.0, 1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125]
-    dictionary_of_durations = {16.0: '\longa', 8.0: '\\breve', 4.0: '1', 2.0: '2', 1.0: '4',
-        0.5: '8', 0.25: '16', 0.125: '32', 0.0625: '64', 0.3125: '128'}
+    dictionary_of_durations = {16.0: u'\longa', 8.0: u'\\breve', 4.0: u'1', 2.0: u'2', 1.0: u'4',
+        0.5: u'8', 0.25: u'16', 0.125: u'32', 0.0625: u'64', 0.3125: u'128'}
 
     # So we only access the quarterLength once
     dur_ql = dur.quarterLength
@@ -238,13 +247,13 @@ def _octave_num_to_lily(num):
     >>> _octave_num_to_lily(6)
     "'''"
     """
-    dictionary_of_octaves = {0: ",,,", 1: ",,", 2: ",", 3: "", 4: "'", 5: "''", 6: "'''",
-        7: "''''", 8: "'''''", 9: "''''''", 10: "''''''", 11: "''''''", 12: "'''''''''"}
+    dictionary_of_octaves = {0: u",,,", 1: u",,", 2: u",", 3: u"", 4: u"'", 5: u"''", 6: u"'''",
+        7: u"''''", 8: u"'''''", 9: u"''''''", 10: u"''''''", 11: u"''''''", 12: u"'''''''''"}
 
     if num in dictionary_of_octaves:
         return dictionary_of_octaves[num]
     else:
-        raise UnidentifiedObjectError('Octave out of range: ' + str(num))
+        raise UnidentifiedObjectError('Octave out of range: ' + unicode(num))
 
 
 def _pitch_to_lily(start_p, include_octave=True):
@@ -272,9 +281,9 @@ def _pitch_to_lily(start_p, include_octave=True):
 
     for accidental in start_pc[1:]:
         if '-' == accidental:
-            post += 'es'
+            post += u'es'
         elif '#' == accidental:
-            post += 'is'
+            post += u'is'
 
     if include_octave:
         if start_p.octave is None:
@@ -283,6 +292,118 @@ def _pitch_to_lily(start_p, include_octave=True):
             post += _octave_num_to_lily(start_p.octave)
 
     return post
+
+
+def _process_stream(the_stream, the_settings):
+    """
+    Create a string that contains all the LilyPond syntax for the object.
+
+    Parameters
+    ----------
+
+    the_stream : music21.stream.Part
+    the_stream : music21.stream.Score
+    the_stream : music21.metadata.Metadata
+    the_stream : music21.layout.StaffGroup
+    the_stream : music21.humdrum.spineParser.MiscTandem
+        The object to convert to its LilyPond syntax. If a Part has the "lily_analysis_voice"
+        attribute, and it is True, then all Note objects will be turned into spacer objects that
+        may contain an annotation, and all Rest objects will be turned into spacer objects without
+        an annotation.
+
+    the_settings : LilyPondSettings
+        ????
+
+    Returns
+    -------
+
+    a string
+        The LilyPond syntax for the given music21 object.
+
+    Raises
+    ------
+
+    UnidentifiedObjectError
+        When the object is of a type not supported by this function.
+    """
+
+    if isinstance(the_stream, stream.Score):
+        return ScoreMaker(the_stream, the_settings).get_lilypond()
+    elif isinstance(the_stream, stream.Part):
+        return PartMaker(the_stream, the_settings).get_lilypond()
+    elif isinstance(the_stream, metadata.Metadata):
+        return MetadataMaker(the_stream, the_settings).get_lilypond()
+    elif isinstance(the_stream, layout.StaffGroup):
+        # TODO: Figure out how to use this by reading documentation
+        return ''
+    elif isinstance(the_stream, humdrum.spineParser.MiscTandem):
+        # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
+        # Is there really nothing we can use this for? Seems like these exist only to help
+        # the music21 developers.
+        return ''
+    else:
+        # Anything else, we don't know what it is!
+        msg = 'Unknown object in Stream: '
+        raise UnidentifiedObjectError(msg + unicode(the_stream))
+
+
+def _run_lilypond(filename, the_settings):
+    """
+    Arguments should be a str that is the file name followed by a
+    LilyPondSettings object.
+    """
+    # Make the PDF filename: if "filename" ends with ".ly" then remove it so
+    # we don't output to ".ly.pdf"
+    pdf_filename = ''
+    if 3 < len(filename) and '.ly' == filename[-3:]:
+        pdf_filename = filename[:-3]
+    else:
+        pdf_filename = filename
+
+    # NB: this method returns something that might be interesting
+    Popen([the_settings.get_property('lilypond_path'), '--pdf', '-o', pdf_filename, filename],
+        stdout=PIPE,
+        stderr=PIPE)
+
+
+def process_score(the_score, the_settings=None, filename='test_output/lily_output.ly'):
+    """
+    Process an entire music21 Score object, then run LilyPond on the resulting LilyPond source
+    file, to generate a PDF score.
+
+    Parameters
+    ----------
+
+    the_score : music21.stream.Score
+
+    the_settings : LilyPondSettings
+        Optional settings object. If none is provided, or if "None" is provided, a new instance
+        will be created with the default settings.
+
+    filename : string
+        Optional filename for output. The default is "test_lily_output.ly".
+
+    Returns
+    -------
+
+    None
+
+    Side Effects
+    ------------
+
+    Runs the LilyPond program installed on your computer. Creates a file on your computer.
+    """
+
+    if the_settings is None:
+        the_settings = LilyPondSettings()
+
+    score_to_write = _process_stream(the_score, the_settings)
+    output_result = file_outputter(score_to_write, filename)
+    if output_result[1] is not None:
+        # There was some sort of error while outputting the file
+        raise IOError('Could not output file ' + output_result[1])
+    else:
+        _run_lilypond(output_result[0], the_settings)
 
 
 class NoteMaker(LilyPondObjectMaker):
@@ -318,35 +439,35 @@ class NoteMaker(LilyPondObjectMaker):
             # We obviously can't ask for the pitch of a Rest
             the_pitch = None
             if self._as_m21.isRest:
-                the_pitch = 'r'
+                the_pitch = u'r'
             else:
                 the_pitch = _pitch_to_lily(self._as_m21.pitch)
             # But this should be the same for everybody
             for durational_component in self._as_m21.duration.components:
                 post = the_pitch
                 post += _duration_to_lily(durational_component, self._known_tuplet)
-                post += '~ '
+                post += u'~ '
             post = post[:-2]
         elif self._as_m21.isRest:
-            post += "r" + _duration_to_lily(self._as_m21.duration, self._known_tuplet)
+            post += u"r" + _duration_to_lily(self._as_m21.duration, self._known_tuplet)
         elif hasattr(self._as_m21, 'lily_invisible') and \
         True == self._as_m21.lily_invisible:
-            post += "s" + _duration_to_lily(self._as_m21.duration, self._known_tuplet)
+            post += u"s" + _duration_to_lily(self._as_m21.duration, self._known_tuplet)
         else:
             post += _pitch_to_lily(self._as_m21.pitch) + \
                 _duration_to_lily(self._as_m21.duration, self._known_tuplet)
 
         if self._as_m21.tie is not None:
             if self._as_m21.tie.type is 'start':
-                post += '~'
+                post += u'~'
 
         if hasattr(self._as_m21, 'lily_markup'):
-            post += str(self._as_m21.lily_markup)
+            post += unicode(self._as_m21.lily_markup)
 
         self._as_ly = post
 
 
-class MeasureMaker(object):
+class MeasureMaker(LilyPondObjectMaker):
     """
     Class corresponding to a music21.stream.Measure object. Holds information about all the notes
     and chords and other things in the measure.
@@ -359,7 +480,7 @@ class MeasureMaker(object):
         Input should be a Measure.
         """
 
-        post = "\t"
+        post = u"\t"
 
         # Hold whether this Measure is supposed to be "invisible"
         invisible = False
@@ -368,7 +489,7 @@ class MeasureMaker(object):
 
         # Add the first requirement of invisibility
         if invisible:
-            post += '\stopStaff\n\t'
+            post += u'\stopStaff\n\t'
 
         # first check if it's a partial (pick-up) measure
         if 0.0 < self._as_m21.duration.quarterLength < self._as_m21.barDuration.quarterLength:
@@ -378,12 +499,12 @@ class MeasureMaker(object):
             self._as_m21.barDuration.quarterLength:
                 # But still, we may get something stupid...
                 try:
-                    post += "\\partial " + _duration_to_lily(self._as_m21.duration) + "\n\t"
+                    post += u"\\partial " + _duration_to_lily(self._as_m21.duration) + u"\n\t"
                 except UnidentifiedObjectError:
                     # ... so if it doesn't work the first time, it may in fact be a
                     # partial measure; we'll try rounding and see what we can get.
                     rounded_duration = Duration(round(self._as_m21.duration.quarterLength, 2))
-                    post += "\\partial " + _duration_to_lily(rounded_duration) + "\n\t"
+                    post += u"\\partial " + _duration_to_lily(rounded_duration) + u"\n\t"
 
         # Make self._as_m21 an iterable, so we can pull in multiple elements when we
         # need to deal with tuplets.
@@ -401,23 +522,23 @@ class MeasureMaker(object):
                 if isinstance(obj, note.Rest) and \
                 self._as_m21.srcStream.barDuration.quarterLength == obj.quarterLength:
                     if invisible:
-                        post += 's' + _duration_to_lily(obj.duration) + ' '
+                        post += u's' + _duration_to_lily(obj.duration) + u' '
                     else:
-                        post += 'R' + _duration_to_lily(obj.duration) + ' '
+                        post += u'R' + _duration_to_lily(obj.duration) + u' '
                 # Is it the start of a tuplet?
                 elif obj.duration.tuplets is not None and len(obj.duration.tuplets) > 0:
                     number_of_tuplet_components = obj.duration.tuplets[0].numberNotesActual
                     in_the_space_of = obj.duration.tuplets[0].numberNotesNormal
-                    post += '\\times ' + str(in_the_space_of) + '/' + \
-                        str(number_of_tuplet_components) + ' { ' + \
-                        NoteMaker(obj, True).get_lilypond() + " "
+                    post += u'\\times ' + unicode(in_the_space_of) + u'/' + \
+                        unicode(number_of_tuplet_components) + u' { ' + \
+                        NoteMaker(obj, True).get_lilypond() + u" "
                     # For every tuplet component...
                     for _ in repeat(None, number_of_tuplet_components - 1):
-                        post += NoteMaker(next(self._as_m21), True).get_lilypond() + ' '
-                    post += '} '
+                        post += NoteMaker(next(self._as_m21), True).get_lilypond() + u' '
+                    post += u'} '
                 # It's just a regular note or rest
                 else:
-                    post += NoteMaker(obj).get_lilypond() + ' '
+                    post += NoteMaker(obj).get_lilypond() + u' '
 
             #if isinstance(obj, Note):
                 #post += note_to_lily(obj) + " "
@@ -432,47 +553,45 @@ class MeasureMaker(object):
             # Clef
             elif isinstance(obj, clef.Clef):
                 if invisible:
-                    post += "\\once \\override Staff.Clef #'transparent = ##t\n\t"
+                    post += u"\\once \\override Staff.Clef #'transparent = ##t\n\t"
 
                 if isinstance(obj, clef.TrebleClef):
-                    post += "\\clef treble\n\t"
+                    post += u"\\clef treble\n\t"
                 elif isinstance(obj, clef.BassClef):
-                    post += "\\clef bass\n\t"
+                    post += u"\\clef bass\n\t"
                 elif isinstance(obj, clef.TenorClef):
-                    post += "\\clef tenor\n\t"
+                    post += u"\\clef tenor\n\t"
                 elif isinstance(obj, clef.AltoClef):
-                    post += "\\clef alto\n\t"
+                    post += u"\\clef alto\n\t"
                 else:
                     raise UnidentifiedObjectError('Clef type not recognized: ' + obj)
             # Time Signature
             elif isinstance(obj, meter.TimeSignature):
                 if invisible:
-                    post += "\\once \\override Staff.TimeSignature #'transparent = ##t\n\t"
+                    post += u"\\once \\override Staff.TimeSignature #'transparent = ##t\n\t"
 
-                post += "\\time " + str(obj.beatCount) + "/" + \
-                        str(obj.denominator) + "\n\t"
+                post += u"\\time " + unicode(obj.beatCount) + "/" + \
+                        unicode(obj.denominator) + u"\n\t"
             # Key Signature
             elif isinstance(obj, key.KeySignature):
                 pitch_and_mode = obj.pitchAndMode
                 if invisible:
-                    post += "\\once \\override Staff.KeySignature #'transparent = ##t\n\t"
+                    post += u"\\once \\override Staff.KeySignature #'transparent = ##t\n\t"
 
                 if 2 == len(pitch_and_mode) and pitch_and_mode[1] is not None:
-                    post += "\\key " + \
-                        _pitch_to_lily(pitch_and_mode[0], include_octave=False) + \
-                        " \\" + pitch_and_mode[1] + "\n\t"
+                    post += u"\\key " + _pitch_to_lily(pitch_and_mode[0], include_octave=False) + \
+                        u" \\" + pitch_and_mode[1] + "\n\t"
                 else:
                     # We'll have to assume it's \major, because music21 does that.
-                    post += "\\key " + \
-                        _pitch_to_lily(pitch_and_mode[0], include_octave=False) + \
-                        " \\major\n\t"
+                    post += u"\\key " + _pitch_to_lily(pitch_and_mode[0], include_octave=False) + \
+                        u" \\major\n\t"
             # Barline
             elif isinstance(obj, bar.Barline):
                 # There's no need to write down a regular barline, because they tend
                 # to happen by themselves. Of course, this will have to change once
                 # we have the ability to override the standard barline.
                 if 'regular' != obj.style:
-                    post += '\n\t' + _barline_to_lily(obj) + " "
+                    post += u'\n\t' + _barline_to_lily(obj) + u" "
             # PageLayout and SystemLayout
             elif isinstance(obj, layout.SystemLayout) or isinstance(obj, layout.PageLayout):
                 # I don't know what to do with these undocumented features.
@@ -486,20 +605,20 @@ class MeasureMaker(object):
                 pass
             # We don't know what it is, and should probably figure out!
             else:
-                raise UnidentifiedObjectError('Unknown object in Bar: ' + str(obj))
+                raise UnidentifiedObjectError('Unknown object in Bar: ' + unicode(obj))
 
         # Append a bar-check symbol, if there was anything outputted.
         if len(post) > 1:
-            post += "|\n"
+            post += u"|\n"
 
         # The final requirement of invisibility
         if invisible:
-            post += '\t\\startStaff\n'
+            post += u'\t\\startStaff\n'
 
         self._as_ly = post
 
 
-class AnalysisVoiceMaker(object):
+class AnalysisVoiceMaker(LilyPondObjectMaker):
     """
     Processes a music21 Part that has the "lily_analysis_voice attribute," and it is True.
 
@@ -518,7 +637,7 @@ class AnalysisVoiceMaker(object):
             """
             Something something inner function.
             """
-            post = 's'
+            post = u's'
 
             if len(lily_this.duration.components) > 1:
                 for durational_component in lily_this.duration.components:
@@ -529,15 +648,266 @@ class AnalysisVoiceMaker(object):
 
             if lily_this.tie is not None:
                 if lily_this.tie.type is 'start':
-                    post += '~'
+                    post += u'~'
 
             if hasattr(lily_this, 'lily_markup'):
-                post += str(lily_this.lily_markup)
+                post += unicode(lily_this.lily_markup)
 
             return post
 
         # Just try to fill in all the stuff
         post = ''
         for obj in self._as_m21:
-            post += '\t' + space_for_lily(obj) + '\n'
+            post += u'\t' + space_for_lily(obj) + u'\n'
+        self._as_ly = post
+
+
+class PartMaker(LilyPondObjectMaker):
+    """
+    Convert a music21.stream.Part instance into its corresponding LilyPond markup.
+    """
+
+    # Instance Data
+    # _setts : some settings thing
+
+    def __init__(self, m21_obj, setts):
+        """
+        Create a new PartMaker instance.
+
+        Parameters
+        ----------
+
+        setts : ???
+        """
+        super(PartMaker, self).__init__(m21_obj)
+        self._setts = setts
+
+    def _calculate_lily(self):
+        """
+        Generate the LilyPond string corresponding to the objects stored in this
+        LilyPondObjectMaker.
+        """
+        # Start the Part
+        # We used to use some of the part's .bestName, but many scores (like
+        # for **kern) don't have this.
+        call_this_part = _string_of_n_letters(8)
+        self._setts._parts_in_this_score.append(call_this_part)
+        post = call_this_part + u" =\n{\n"
+
+        # If this part has the "lily_instruction" property set, this goes here
+        if hasattr(self._as_m21, 'lily_instruction'):
+            post += self._as_m21.lily_instruction
+
+        # If the part has a .bestName property set, we'll use it to generate
+        # both the .instrumentName and .shortInstrumentName for LilyPond.
+        instr_name = self._as_m21.getInstrument().partName
+        if instr_name is not None and len(instr_name) > 0:
+            post += u'\t%% ' + instr_name + u'\n'
+            post += u'\t\set Staff.instrumentName = \markup{ "' + instr_name + u'" }\n'
+            if len(instr_name) > 3:
+                post += u'\t\set Staff.shortInstrumentName = \markup{ "' + \
+                    instr_name[:3] + u'." }\n'
+            else:
+                post += u'\t\set Staff.shortInstrumentName = \markup{ "' + instr_name + u'" }\n'
+        elif hasattr(self._as_m21, 'lily_analysis_voice') and \
+        True == self._as_m21.lily_analysis_voice:
+            self._setts._analysis_notation_parts.append(call_this_part)
+            post += u'\t%% vis annotated analysis\n'
+            post += AnalysisVoiceMaker(self._as_m21).get_lilypond()
+        # Custom settings for bar numbers
+        if self._setts.get_property('bar numbers') is not None:
+            post += u"\n\t\override Score.BarNumber #'break-visibility = " + \
+                    self._setts.get_property('bar numbers') + u'\n'
+        #----
+
+        # If it's an analysis-annotation part, we'll handle this differently.
+        if hasattr(self._as_m21, 'lily_analysis_voice') and \
+        True == self._as_m21.lily_analysis_voice:
+            pass
+        # Otherwise, it's hopefully just a regular, everyday Part.
+        else:
+            # What's in the Part?
+            # TODO: break this into a separate method, process_part()
+            # TODO: make this less stupid
+            for thing in self._as_m21:
+                # Probably measures.
+                if isinstance(thing, stream.Measure):
+                    post += MeasureMaker(thing).get_lilypond()
+                elif isinstance(thing, instrument.Instrument):
+                    # We can safely ignore this (for now?) because we already dealt
+                    # with the part name earlier.
+                    pass
+                elif isinstance(thing, tempo.MetronomeMark):
+                    # TODO: at some point, we'll have to deal with this nicely
+                    pass
+                elif isinstance(thing, meter.TimeSignature):
+                    pass
+                elif isinstance(thing, note.Note) or isinstance(thing, note.Rest):
+                    post += NoteMaker(thing).get_lilypond() + ' '
+                # **kern importer garbage... well, it's only garbage to us
+                elif isinstance(thing, humdrum.spineParser.MiscTandem):
+                    # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
+                    # Is there really nothing we can use this for? Seems like these
+                    # exist only to help music21 developers.
+                    pass
+                else:
+                    msg = 'Unknown object in Stream while processing Part: '
+                    raise UnidentifiedObjectError(msg + unicode(thing))
+        # finally, to close the part
+        post += u"}\n"
+
+        # NOTE: you must re-implement this in subclasses
+        self._as_ly = post
+
+
+class MetadataMaker(LilyPondObjectMaker):
+    """
+    Convert a music21.metadata.Metadata instance into its corresponding LilyPond markup, which is
+    the \header{} block of the resulting LilyPond file
+    """
+
+    # Instance Data
+    # _setts : some settings thing
+
+    def __init__(self, m21_obj, setts):
+        """
+        Create a new MetadataMaker instance.
+
+        Parameters
+        ----------
+
+        setts : ???
+        """
+        super(MetadataMaker, self).__init__(m21_obj)
+        self._setts = setts
+
+    def _calculate_lily(self):
+        """
+        Generate the LilyPond string corresponding to the objects stored in this
+        LilyPondObjectMaker.
+        """
+        post = u"\header {\n"
+
+        if self._as_m21.composer is not None:
+            # TODO: test this
+            # NOTE: this commented line is what I used to have... unsure whether
+            # I need it
+            #post += '\tcomposer = \markup{ "' + self._as_m21.composer.name + '" }\n'
+            post += u'\tcomposer = \markup{ "' + self._as_m21.composer + u'" }\n'
+        if self._as_m21.composers is not None:
+            # I don't really know what to do with non-composer contributors
+            pass
+        if 'None' != self._as_m21.date:
+            post += u'\tdate = "' + unicode(self._as_m21.date) + u'"\n'
+        if self._as_m21.movementName is not None:
+            post += u'\tsubtitle = \markup{ "'
+            if None != self._as_m21.movementNumber:
+                post += unicode(self._as_m21.movementNumber) + u': '
+            post += self._as_m21.movementName + u'" }\n'
+        if self._as_m21.opusNumber is not None:
+            post += u'\topus = "' + unicode(self._as_m21.opusNumber) + u'"\n'
+        if self._as_m21.title is not None:
+            post += u'\ttitle = \markup{ \"' + self._as_m21.title
+            if self._as_m21.alternativeTitle is not None:
+                post += u'(\\"' + self._as_m21.alternativeTitle + u'\\")'
+            post += u'" }\n'
+        # Extra Formatting Options
+        # Tagline
+        if self._setts.get_property('tagline') is None:
+            post += u'\ttagline = ""\n'
+        elif self._setts.get_property('tagline') == '':
+            pass
+        else:
+            post += u'\ttagline = "' + self._setts.get_property('tagline') + '"\n'
+        # close the \header{} block
+        post += u"}\n"
+
+        self._as_ly = post
+
+
+class ScoreMaker(LilyPondObjectMaker):
+    """
+    Convert a music21.stream.Score instance into its corresponding LilyPond markup.
+    """
+
+    # Instance Data
+    # _setts : some settings thing
+
+    def __init__(self, m21_obj, setts):
+        """
+        Create a new ScoreMaker instance.
+
+        Parameters
+        ----------
+
+        setts : ???
+        """
+        super(ScoreMaker, self).__init__(m21_obj)
+        self._setts = setts
+
+    def _calculate_lily(self):
+        """
+        Generate the LilyPond string corresponding to the objects stored in this
+        LilyPondObjectMaker.
+        """
+
+        # Things Before Parts
+        # Our mark!
+        post = u'% LilyPond output from music21 via "output_LilyPond.py"\n'
+        # Version
+        post += u'\\version "' + self._setts.get_property('lilypond_version') + u'"\n\n'
+        # Set paper size
+        post += u'\\paper {\n\t#(set-paper-size "' + self._setts.get_property('paper_size') + \
+            u'")\n}\n\n'
+
+        # Parts
+        # This can hold all of our parts... they might also be a StaffGroup,
+        # a Metadata object, or something else.
+        list_of_parts = []
+        # Go through the possible parts and see what we find.
+        for possible_part in self._as_m21:
+            list_of_parts.append(_process_stream(possible_part, self._setts) + u"\n")
+        # Append the parts to the score we're building. In the future, it'll
+        # be important to re-arrange the parts if necessary, or maybe to filter
+        # things, so we'll keep everything in this supposedly efficient loop.
+        for i in xrange(len(list_of_parts)):
+            post += list_of_parts[i]
+
+        # Things After Parts
+        # Output the \score{} block
+        post += u'\\score {\n\t\\new StaffGroup\n\t<<\n'
+        for each_part in self._setts._parts_in_this_score:
+            if each_part in self._setts._analysis_notation_parts:
+                post += u'\t\t\\new VisAnnotation = "' + each_part + u'" \\' + each_part + u'\n'
+            else:
+                post += u'\t\t\\new Staff = "' + each_part + u'" \\' + each_part + u'\n'
+        post += u'\t>>\n'
+
+        # Output the \layout{} block
+        post += u'\t\\layout{\n'
+        if self._setts.get_property('indent') is not None:
+            post += u'\t\tindent = ' + self._setts.get_property('indent') + u'\n'
+        post += u"""\t\t% VisAnnotation Context
+\t\t\context
+\t\t{
+\t\t\t\\type "Engraver_group"
+\t\t\t\\name VisAnnotation
+\t\t\t\\alias Voice
+\t\t\t\consists "Output_property_engraver"
+\t\t\t\consists "Script_engraver"
+\t\t\t\consists "Text_engraver"
+\t\t\t\consists "Skip_event_swallow_translator"
+\t\t\t\consists "Axis_group_engraver"
+\t\t}
+\t\t% End VisAnnotation Context
+\t\t
+\t\t% Modify "StaffGroup" context to accept VisAnnotation context.
+\t\t\context
+\t\t{
+\t\t\t\StaffGroup
+\t\t\t\\accepts VisAnnotation
+\t\t}
+"""
+        post += u'\t}\n}\n'
+
         self._as_ly = post
