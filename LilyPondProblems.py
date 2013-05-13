@@ -26,20 +26,20 @@ output_LilyPond program.
 """
 
 
-class BadFileError( Exception ):
+class BadFileError(Exception):
     """
     output_LilyPond uses this error when there is a problem loading or handling
     a file, not related to a more specific musical element.
     """
     pass
 
-class UnidentifiedObjectError( Exception ):
+class UnidentifiedObjectError(Exception):
     """
     When something can't be identified.
     """
     pass
 
-class ImpossibleToProcessError( Exception ):
+class ImpossibleToProcessError(Exception):
     """
     When something is identified, but for some reason cannot be processed.
     """

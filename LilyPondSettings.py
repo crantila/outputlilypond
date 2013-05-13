@@ -26,7 +26,7 @@ module.
 """
 
 # Python
-from subprocess import Popen, PIPE # for running bash things
+from subprocess import Popen, PIPE  # for running bash things
 from platform import system as which_os
 
 
@@ -46,8 +46,11 @@ class LilyPondSettings:
         auto-detection of whatever's installed)
     - lilypond_path : a str that is the full path to the LilyPond executable
     """
-    
-    def __init__( self ):
+
+    def __init__(self):
+        """
+        Create a new LilyPondSettings instance.
+        """
         # TODO: re-implmement all of the properties as str in _secret_settings
         # Hold a list of the part names in this Score
         self._parts_in_this_score = []
@@ -62,24 +65,24 @@ class LilyPondSettings:
         self._secret_settings['tagline'] = ''
             # empty string means "default tagline"
             # None means "no tagline"
-        self._secret_settings['indent'] = None # TODO: test this
-        self._secret_settings['print_instrument_names'] = True # TODO: implement
+        self._secret_settings['indent'] = None  # TODO: test this
+        self._secret_settings['print_instrument_names'] = True  # TODO: implement
         self._secret_settings['paper_size'] = 'letter'
         # Deal with the LilyPond path and version
         res = LilyPondSettings.detect_lilypond()
         self._secret_settings['lilypond_path'] = res[0]
         self._secret_settings['lilypond_version'] = res[1]
         self._secret_settings['lilypond_version_numbers'] = \
-            LilyPondSettings.make_lily_version_numbers( res[1] )
+            LilyPondSettings.make_lily_version_numbers(res[1])
 
-    def set_property( self, setting_name, setting_value ):
+    def set_property(self, setting_name, setting_value):
         """
         Modify the value of an existing setting.
 
         >>> from output_LilyPond import *
         >>> the_settings = LilyPond_Settings()
-        >>> the_settings.set_property( 'indent', '4\mm' )
-        >>> the_settings.get_property( 'indent' )
+        >>> the_settings.set_property('indent', '4\mm')
+        >>> the_settings.get_property('indent')
         '4\mm'
         """
         # If the setting doesn't already exist, this will trigger a KeyError
@@ -88,7 +91,7 @@ class LilyPondSettings:
         # And if we're still going, it means we can set this setting
         self._secret_settings[setting_name] = setting_value
 
-    def get_property( self, setting_name ):
+    def get_property(self, setting_name):
         """
         Returns the value assigned to a property. If the inputted string does not
         correspond to an existing property name, this method raises a KeyError.
@@ -113,27 +116,27 @@ class LilyPondSettings:
         if 'Windows' == which_os():
             # NOTE: this is just a temporary hack that allows vis to load on Windows
             # computers, but likely without enabling LilyPond supprt
-            return ( 'lilypond.exe', '2.0.0' )
+            return ('lilypond.exe', '2.0.0')
         else:
             # On Linux/OS X/Unix systems, we'll assume a "bash" shell and hope it goes
-            proc = Popen( ['which', 'lilypond'], stdout=PIPE )
-            lily_path = proc.stdout.read()[:-1] # remove terminating newline
-            proc = Popen( [lily_path, '--version'], stdout=PIPE )
+            proc = Popen(['which', 'lilypond'], stdout=PIPE)
+            lily_path = proc.stdout.read()[:-1]  # remove terminating newline
+            proc = Popen([lily_path, '--version'], stdout=PIPE)
             version = proc.stdout.read()
-            lily_verzh = version[version.find('LilyPond') + 9 : version.find('\n') ]
+            lily_verzh = version[version.find('LilyPond') + 9: version.find('\n')]
 
-            return ( lily_path, lily_verzh )
+            return (lily_path, lily_verzh)
 
     @staticmethod
-    def make_lily_version_numbers( version_str ):
+    def make_lily_version_numbers(version_str):
         """
         Take a str with three integers separated by the '.' character and returns
         a 3-tuplet with the integers.
         """
         major = int(version_str[:version_str.find('.')])
-        version_str = version_str[version_str.find('.')+1:]
+        version_str = version_str[version_str.find('.') + 1:]
         minor = int(version_str[:version_str.find('.')])
-        version_str = version_str[version_str.find('.')+1:]
+        version_str = version_str[version_str.find('.') + 1:]
         revision = int(version_str)
 
-        return ( major, minor, revision )
+        return (major, minor, revision)
