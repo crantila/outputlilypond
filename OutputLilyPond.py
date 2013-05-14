@@ -45,6 +45,7 @@ from music21 import humdrum
 from music21 import tempo
 from music21 import note
 from music21 import instrument
+from music21 import expressions
 from music21.duration import Duration
 # output_LilyPond
 from FileOutput import file_outputter
@@ -520,6 +521,9 @@ class MeasureMaker(LilyPondObjectMaker):
         # Make self._as_m21 an iterable, so we can pull in multiple elements when we need to deal
         # with tuplets.
         bar_iter = iter(self._as_m21)
+        # This holds \markup{} blocks that happened before a Note/Rest, and should be appended
+        # to the next Note/Rest that happens.
+        attach_this_markup = ''
         # And fill in all the stuff
         for obj in bar_iter:
             # Note or Rest
@@ -550,16 +554,10 @@ class MeasureMaker(LilyPondObjectMaker):
                 else:
                     post += NoteMaker(obj).get_lilypond() + u' '
 
-            #if isinstance(obj, Note):
-                #post += note_to_lily(obj) + " "
-            #elif isinstance(obj, Rest):
-                ## If it's a full-measure rest, we'll use the upper-case symbol so
-                ## the rest is placed in the middle of the bar. This is something
-                ## note_to_lily() couldn't pick up without access to self._as_m21
-                #if self._as_m21.barDuration.quarterLength == obj.quarterLength:
-                #post += 'R' + duration_to_lily(obj.duration) + ' '
-                #else:
-                #post += note_to_lily(obj) + " "
+                # Is there a \markup{} block to append?
+                if attach_this_markup != '':
+                    post += attach_this_markup
+                    attach_this_markup = ''
             # Clef
             elif isinstance(obj, clef.Clef):
                 if invisible:
@@ -625,6 +623,31 @@ class MeasureMaker(LilyPondObjectMaker):
                 # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
                 # These contain at least part names, and maybe also other interesting metadata(?)
                 pass
+            # Written expression marks (like "con fuoco" or something)
+            elif isinstance(obj, expressions.TextExpression):
+                the_marker = None  # store the local thing
+                if obj.positionVertical > 0:  # above staff
+                    the_marker = u"^\\markup{ "
+                elif obj.positionVertical < 0:  # below staff
+                    the_marker = u"_\\markup{ "
+                else:  # LilyPond can decide above or below
+                    the_marker = u"-\\markup{ "
+                if obj.enclosure is not None:  # put a shape around the text?
+                    pass  # TODO
+                the_marker += u'"' + obj.content + u'" }'
+                if obj.enclosure is not None:  # must close the enclosure, if necessary
+                    the_marker += u'}'
+                the_marker += u' '
+
+                # Find out whether there's a previous Note or Rest to attach to
+                previous_element = self._as_m21.getElementBeforeOffset(obj.offset)
+                if not isinstance(previous_element, note.Note) and \
+                not isinstance(previous_element, note.Rest):
+                    # this variable holds text to append to the next Note/Rest
+                    attach_this_markup += the_marker
+                else:  # There was a previous Note/Rest, so we're good
+                    post += the_marker
+                del the_marker
             # We don't know what it is, and should probably figure out!
             else:
                 msg = 'Unknown object in Measure ' + unicode(self._as_m21.number) + ': ' + \
@@ -636,6 +659,10 @@ class MeasureMaker(LilyPondObjectMaker):
         # Append a bar-check symbol, if there was anything outputted.
         if len(post) > 1:
             post += u"|\n"
+
+        # Append a note if we couldn't include a \markup{} block
+        if attach_this_markup != '':
+            post += u'# Could not include this markup: ' + attach_this_markup
 
         # The final requirement of invisibility
         if invisible:
@@ -778,7 +805,8 @@ class PartMaker(LilyPondObjectMaker):
                     pass
                 else:
                     msg = 'Unknown object in Stream while processing Part: '
-                    raise UnidentifiedObjectError(msg + unicode(thing))
+                    print(msg)  # DEBUG
+                    #raise UnidentifiedObjectError(msg + unicode(thing))
         # finally, to close the part
         post += u"}\n"
 
