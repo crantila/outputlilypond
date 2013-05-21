@@ -34,12 +34,13 @@ from unit_tests import *
 if __name__ == '__main__':
     verb = 1
     # New Tests ---------------------------------------------
-    unittest.TextTestRunner(verbosity=verb).run(test_settings_suite)
-    unittest.TextTestRunner(verbosity=verb).run(detect_lilypond_suite)
-    unittest.TextTestRunner(verbosity=verb).run(octave_number_to_lily_suite)
-    unittest.TextTestRunner(verbosity=verb).run(pitch_to_lily_suite)
-    unittest.TextTestRunner(verbosity=verb).run(duration_to_lily_suite)
-    unittest.TextTestRunner(verbosity=verb).run(note_to_lily_suite)
+    #unittest.TextTestRunner(verbosity=verb).run(test_settings_suite)
+    #unittest.TextTestRunner(verbosity=verb).run(detect_lilypond_suite)
+    #unittest.TextTestRunner(verbosity=verb).run(octave_number_to_lily_suite)
+    #unittest.TextTestRunner(verbosity=verb).run(pitch_to_lily_suite)
+    #unittest.TextTestRunner(verbosity=verb).run(duration_to_lily_suite)
+    #unittest.TextTestRunner(verbosity=verb).run(note_to_lily_suite)
+    unittest.TextTestRunner(verbosity=verb).run(barline_to_lily_suite)
 
     # Old Tests ---------------------------------------------
     # Unit Tests

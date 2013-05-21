@@ -128,13 +128,21 @@ def _barline_to_lily(barline):
     ----------
 
     barline : music21.bar.Barline
-        The barline to convert to LilyPond format.
+        The barline to convert to LilyPond format. The 'style' property must be one of these:
+        'regular', 'dotted', 'dashed', 'heavy', 'double', 'final', 'heavy-light', 'heavy-heavy',
+        'tick', 'short', or 'none'.
 
     Returns
     -------
 
     a string
         The LilyPond notation for this barline.
+
+    Raises
+    ------
+
+    UnidentifiedObjectError
+        If the barline's "style" property is not recognized
     """
 
     # From the music21 source code... a list of barline styles...
@@ -153,7 +161,7 @@ def _barline_to_lily(barline):
         return post
     else:
         start_msg = 'Barline type not recognized ('
-        UnidentifiedObjectError(start_msg + barline.style + ')')
+        raise UnidentifiedObjectError(start_msg + barline.style + ')')
 
 
 def _duration_to_lily(dur, known_tuplet=False):

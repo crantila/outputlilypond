@@ -23,7 +23,8 @@
 
 import unittest
 from OutputLilyPond import _octave_num_to_lily, _pitch_to_lily, _duration_to_lily, NoteMaker
-from music21 import note, pitch, duration, tie
+from OutputLilyPond import _barline_to_lily
+from music21 import note, pitch, duration, tie, bar
 # from test_corpus import process_measure_unit
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
 
@@ -285,8 +286,73 @@ class Test_note_to_lily(unittest.TestCase):
         expected = u"r1~ r2~ r4~ r8~ r16~ r32~ r64...."
         self.assertEqual(actual.get_lilypond(), expected)
 
+
+class Test_Barline_to_Lily(unittest.TestCase):
+    def test_barline_to_lily_1(self):
+        bee_ell = bar.Barline('regular')
+        expected = u'\\bar "|"'
+        self.assertEqual(_barline_to_lily(bee_ell), expected)
+        
+    def test_barline_to_lily_2(self):
+        bee_ell = bar.Barline('dotted')
+        expected = u'\\bar ":"'
+        self.assertEqual(_barline_to_lily(bee_ell), expected)
+        
+    def test_barline_to_lily_3(self):
+        bee_ell = bar.Barline('dashed')
+        expected = u'\\bar "dashed"'
+        self.assertEqual(_barline_to_lily(bee_ell), expected)
+        
+    def test_barline_to_lily_4(self):
+        bee_ell = bar.Barline('heavy')
+        expected = u'\\bar "|.|"'
+        self.assertEqual(_barline_to_lily(bee_ell), expected)
+        
+    def test_barline_to_lily_5(self):
+        bee_ell = bar.Barline('double')
+        expected = u'\\bar "||"'
+        self.assertEqual(_barline_to_lily(bee_ell), expected)
+        
+    def test_barline_to_lily_6(self):
+        bee_ell = bar.Barline('final')
+        expected = u'\\bar "|."'
+        self.assertEqual(_barline_to_lily(bee_ell), expected)
+        
+    def test_barline_to_lily_7(self):
+        bee_ell = bar.Barline('heavy-light')
+        expected = u'\\bar ".|"'
+        self.assertEqual(_barline_to_lily(bee_ell), expected)
+        
+    def test_barline_to_lily_8(self):
+        bee_ell = bar.Barline('heavy-heavy')
+        expected = u'\\bar ".|."'
+        self.assertEqual(_barline_to_lily(bee_ell), expected)
+        
+    def test_barline_to_lily_9(self):
+        bee_ell = bar.Barline('tick')
+        expected = u"\\bar \"'\""
+        self.assertEqual(_barline_to_lily(bee_ell), expected)
+        
+    def test_barline_to_lily_10(self):
+        bee_ell = bar.Barline('short')
+        expected = u"\\bar \"'\""
+        self.assertEqual(_barline_to_lily(bee_ell), expected)
+        
+    def test_barline_to_lily_11(self):
+        bee_ell = bar.Barline('none')
+        expected = u'\\bar ""'
+        self.assertEqual(_barline_to_lily(bee_ell), expected)
+        
+    def test_barline_to_lily_12(self):
+        # error
+        bee_ell = bar.Barline('regular')
+        bee_ell._style = 'marmalade sun for everyone'
+        self.assertRaises(UnidentifiedObjectError, _barline_to_lily, bee_ell)
+    
+    
 # Define test suites
 octave_number_to_lily_suite = unittest.TestLoader().loadTestsFromTestCase(Test_octave_num_to_lily)
 pitch_to_lily_suite = unittest.TestLoader().loadTestsFromTestCase(Test_Pitch_to_Lily)
 duration_to_lily_suite = unittest.TestLoader().loadTestsFromTestCase(Test_duration_to_lily)
 note_to_lily_suite = unittest.TestLoader().loadTestsFromTestCase(Test_note_to_lily)
+barline_to_lily_suite = unittest.TestLoader().loadTestsFromTestCase(Test_Barline_to_Lily)
