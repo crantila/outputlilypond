@@ -5,7 +5,7 @@
 # Name:         __init__.py for OutputLilyPondTests
 # Purpose:      Imports OutputLilyPondTests for a client program
 #
-# Copyright (C) 2012 Christopher Antila
+# Copyright (C) 2012, 2013 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
