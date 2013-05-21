@@ -249,7 +249,7 @@ def _octave_num_to_lily(num):
     "'''"
     """
     dictionary_of_octaves = {0: u",,,", 1: u",,", 2: u",", 3: u"", 4: u"'", 5: u"''", 6: u"'''",
-        7: u"''''", 8: u"'''''", 9: u"''''''", 10: u"''''''", 11: u"''''''", 12: u"'''''''''"}
+        7: u"''''", 8: u"'''''", 9: u"''''''", 10: u"'''''''", 11: u"''''''''", 12: u"'''''''''"}
 
     if num in dictionary_of_octaves:
         return dictionary_of_octaves[num]
@@ -420,8 +420,8 @@ def process_score(the_score, the_settings=None, filename='test_output/lily_outpu
 
 class NoteMaker(LilyPondObjectMaker):
     """
-    Class corresponding to a music21.note.Note object. Holds information about the pitch class,
-    register, duration, articulation, etc., about a Note.
+    Class corresponding to a music21.note.Note or Rest object. Holds information about the pitch
+    class, register, duration, articulation, etc., about a Note.
     """
 
     def __init__(self, m21_obj, known_tuplet=False):
@@ -431,51 +431,66 @@ class NoteMaker(LilyPondObjectMaker):
         Parameters
         ----------
 
+        m21_obj : music21.note.Note or music21.note.Rest
+            The Note or Rest object to turn into LilyPond source code. There are two special
+            attributes:
+            - lily_invisible (boolean)
+                If this attribute is True, the Note or Rest will use the letter 's' rather than
+                'r' if it is a Rest or the letter name if it is a Note.
+            - lily_markup (string)
+                If this attribute exists, its contents will be passed through unicode() then
+                appended after (to the right of) the rest of the Note/Rest/object's code. The
+                intended purpose is use with the \markup{} command.
+
         known_tuplet : boolean
             Whether we know this Note is part of a tuplet. Default is False.
         """
         super(NoteMaker, self).__init__(m21_obj)
         self._known_tuplet = known_tuplet
-        self._calculate_lily()
 
     def _calculate_lily(self):
         """
         Prepare and return the LilyPond source code for this Note.
-        """
-        # NOTE: I removed a "known_tuplet" argument that I said was directly passed
-        # to duration_to_lily
 
+        Raises
+        ------
+
+        Any exceptions raised by the following functions will also be raised by this:
+        - _pitch_to_lily()
+        - _duration_to_lily()
+        """
         post = ''
 
+        # Find the letter: either a pitch, 'r', or 's'
+        the_pitch = None
+        if hasattr(self._as_m21, 'lily_invisible') and True == self._as_m21.lily_invisible:
+            the_pitch = u's'
+        elif self._as_m21.isRest:
+            the_pitch = u'r'
+        else:
+            the_pitch = _pitch_to_lily(self._as_m21.pitch)
+
+        # Find the duration
         if len(self._as_m21.duration.components) > 1:
-            # We obviously can't ask for the pitch of a Rest
-            the_pitch = None
-            if self._as_m21.isRest:
-                the_pitch = u'r'
-            else:
-                the_pitch = _pitch_to_lily(self._as_m21.pitch)
-            # But this should be the same for everybody
+            # We have a multiple-part duration
             for durational_component in self._as_m21.duration.components:
-                post = the_pitch
-                post += _duration_to_lily(durational_component, self._known_tuplet)
+                post += the_pitch + _duration_to_lily(durational_component, self._known_tuplet)
                 post += u'~ '
             post = post[:-2]
-        elif self._as_m21.isRest:
-            post += u"r" + _duration_to_lily(self._as_m21.duration, self._known_tuplet)
-        elif hasattr(self._as_m21, 'lily_invisible') and \
-        True == self._as_m21.lily_invisible:
-            post += u"s" + _duration_to_lily(self._as_m21.duration, self._known_tuplet)
         else:
-            post += _pitch_to_lily(self._as_m21.pitch) + \
-                _duration_to_lily(self._as_m21.duration, self._known_tuplet)
+            # Just a straightforward duration
+            post = the_pitch + _duration_to_lily(self._as_m21.duration, self._known_tuplet)
 
+        # Add a tie if necessary
         if self._as_m21.tie is not None:
             if self._as_m21.tie.type is 'start':
                 post += u'~'
 
+        # Add the \markup{} block, if there is one
         if hasattr(self._as_m21, 'lily_markup'):
             post += unicode(self._as_m21.lily_markup)
 
+        # Done
         self._as_ly = post
 
 

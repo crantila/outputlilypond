@@ -21,8 +21,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 """
-Imports everything needed to use the OutputLilyPond module in a client program.
+Import everything needed to use the OutputLilyPond module in a client program.
 """
 
-print( 'output_LilyPond is a music21-based library for music analysis.' )
-print( '\nYou cannot use this program independently of an analysis program.' )
+__all__ = ['FileOutput', 'LilyPondProblems', 'LilyPondSettings', 'OutputLilyPond']
+
+from OutputLilyPond import *

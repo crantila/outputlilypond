@@ -21,41 +21,37 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-
-
 # Confirmed Requirements:
 import unittest
-from OutputLilyPondTests.TestSettings import test_settings_suite, \
-   detect_lilypond_suite
-from old_unit_tests import *
-from old_integration_tests import *
-
-
+from OutputLilyPondTests.TestSettings import test_settings_suite, detect_lilypond_suite
+from unit_tests import *
+#from old_unit_tests import *
+#from old_integration_tests import *
 
 #-------------------------------------------------------------------------------
 # "Main" Function
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
-   print( "###############################################################################" )
-   print( "## output_LilyPond Test Suite                                                ##" )
-   print( "###############################################################################" )
-   print( "" )
+    verb = 1
+    # New Tests ---------------------------------------------
+    unittest.TextTestRunner(verbosity=verb).run(test_settings_suite)
+    unittest.TextTestRunner(verbosity=verb).run(detect_lilypond_suite)
+    unittest.TextTestRunner(verbosity=verb).run(octave_number_to_lily_suite)
+    unittest.TextTestRunner(verbosity=verb).run(pitch_to_lily_suite)
+    unittest.TextTestRunner(verbosity=verb).run(duration_to_lily_suite)
+    unittest.TextTestRunner(verbosity=verb).run(note_to_lily_suite)
 
-   # New Tests ---------------------------------------------
-   unittest.TextTestRunner(verbosity=1).run(test_settings_suite)
-   unittest.TextTestRunner( verbosity = 1 ).run( detect_lilypond_suite )
+    # Old Tests ---------------------------------------------
+    # Unit Tests
+    #unittest.TextTestRunner( verbosity = 1 ).run( t_o_n_t_l )
+    #unittest.TextTestRunner( verbosity = 1 ).run( t_p_t_l )
+    #unittest.TextTestRunner( verbosity = 1 ).run( t_d_t_l )
+    #unittest.TextTestRunner( verbosity = 1 ).run( t_n_t_l )
+    #unittest.TextTestRunner( verbosity = 1 ).run( t_b_t_l )
+    #unittest.TextTestRunner( verbosity = 1 ).run( t_p_m )
 
-   # Old Tests ---------------------------------------------
-   # Unit Tests
-   unittest.TextTestRunner( verbosity = 1 ).run( t_o_n_t_l )
-   unittest.TextTestRunner( verbosity = 1 ).run( t_p_t_l )
-   unittest.TextTestRunner( verbosity = 1 ).run( t_d_t_l )
-   unittest.TextTestRunner( verbosity = 1 ).run( t_n_t_l )
-   unittest.TextTestRunner( verbosity = 1 ).run( t_b_t_l )
-   unittest.TextTestRunner( verbosity = 1 ).run( t_p_m )
-
-   # Run Integration Tests
-   unittest.TextTestRunner( verbosity = 1 ).run( process_stream_part_suite )
+    ## Run Integration Tests
+    #unittest.TextTestRunner( verbosity = 1 ).run( process_stream_part_suite )
 
 # TODO: Testing
 # - providing a filename to process_score() actually outputs there
