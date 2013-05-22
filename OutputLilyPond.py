@@ -432,6 +432,13 @@ def _process_stream(the_stream, the_settings):
         #raise UnidentifiedObjectError(msg)
 
 
+def run_lilypond(filename):
+    """
+    Given a filename, run lilypond on that file.
+    """
+    return _run_lilypond(filename, LilyPondSettings())
+
+
 def _run_lilypond(filename, the_settings):
     """
     Arguments should be a str that is the file name followed by a
@@ -451,10 +458,10 @@ def _run_lilypond(filename, the_settings):
         stderr=PIPE)
 
 
-def process_score(the_score, the_settings=None, filename='test_output/lily_output.ly'):
+def process_score(the_score, the_settings=None):
     """
-    Process an entire music21 Score object, then run LilyPond on the resulting LilyPond source
-    file, to generate a PDF score.
+    Process an entire music21 Score object, turning it into a string that can be output as a
+    complete LilyPond source file.
 
     Parameters
     ----------
@@ -465,30 +472,14 @@ def process_score(the_score, the_settings=None, filename='test_output/lily_outpu
         Optional settings object. If none is provided, or if "None" is provided, a new instance
         will be created with the default settings.
 
-    filename : string
-        Optional filename for output. The default is "test_lily_output.ly".
-
     Returns
     -------
 
-    None
-
-    Side Effects
-    ------------
-
-    Runs the LilyPond program installed on your computer. Creates a file on your computer.
+    string
+        This is the LilyPond source file.
     """
-
-    if the_settings is None:
-        the_settings = LilyPondSettings()
-
-    score_to_write = _process_stream(the_score, the_settings)
-    output_result = file_outputter(score_to_write, filename)
-    if output_result[1] is not None:
-        # There was some sort of error while outputting the file
-        raise IOError('Could not output file ' + output_result[1])
-    else:
-        _run_lilypond(output_result[0], the_settings)
+    the_settings = LilyPondSettings() if the_settings is None else the_settings
+    return _process_stream(the_score, the_settings)
 
 
 class NoteMaker(LilyPondObjectMaker):
