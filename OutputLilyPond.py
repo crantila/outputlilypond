@@ -108,6 +108,71 @@ class LilyPondObjectMaker(object):
         return self._as_m21
 
 
+def _clef_to_lily(the_clef, append=u'\n', invisible=False):
+    """
+    Generate the LilyPond-format notation for a music21.clef.* object.
+
+    Parameters
+    ----------
+
+    the_clef : music21.clef.*
+        One of:
+        - Treble8vbClef
+        - Treble8vaClef
+        - Bass8vbClef
+        - Bass8vaClef
+        - TrebleClef
+        - BassClef
+        - TenorClef
+        - AltoClef
+
+    append : string
+        Append this to the end of every line of code generated. This is intended to be used for
+        newline and tab characters, for setting up the line after the ones returned by this
+        function. The default value is u'\n' meaning a single newline character.
+
+    invisible : boolean
+        Whether to override the #'transparent property of the clef to ##t in LilyPond
+
+    Returns
+    -------
+
+    string
+        The LilyPond-format notation for this clef.
+
+    Raises
+    ------
+
+    UnidentifiedObjectError
+        If the Clef is not of a known type.
+    """
+    post = u''
+
+    if invisible:
+        post += u"\\once \\override Staff.Clef #'transparent = ##t" + append
+
+    if isinstance(the_clef, clef.Treble8vbClef):
+        post += u"\\clef \"treble_8\""
+    elif isinstance(the_clef, clef.Treble8vaClef):
+        post += u"\\clef \"treble^8\""
+    elif isinstance(the_clef, clef.Bass8vbClef):
+        post += u"\\clef \"bass_8\""
+    elif isinstance(the_clef, clef.Bass8vaClef):
+        post += u"\\clef \"bass^8\""
+    elif isinstance(the_clef, clef.TrebleClef):
+        post += u"\\clef treble"
+    elif isinstance(the_clef, clef.BassClef):
+        post += u"\\clef bass"
+    elif isinstance(the_clef, clef.TenorClef):
+        post += u"\\clef tenor"
+    elif isinstance(the_clef, clef.AltoClef):
+        post += u"\\clef alto"
+    else:
+        raise UnidentifiedObjectError('Clef type not recognized: ' + the_clef)
+
+    return post + append
+
+
 def _string_of_n_letters(n):
     """
     Generate a string of n pseudo-random letters.
@@ -583,34 +648,15 @@ class MeasureMaker(LilyPondObjectMaker):
                     attach_this_markup = ''
             # Clef
             elif isinstance(obj, clef.Clef):
-                if invisible:
-                    post += u"\\once \\override Staff.Clef #'transparent = ##t\n\t"
+                post += _clef_to_lily(obj, append=u'\n\t', invisible=invisible)
 
-                if isinstance(obj, clef.Treble8vbClef):
-                    post += u"\\clef \"treble_8\"\n\t"
-                elif isinstance(obj, clef.Treble8vaClef):
-                    post += u"\\clef \"treble^8\"\n\t"
-                elif isinstance(obj, clef.Bass8vbClef):
-                    post += u"\\clef \"bass_8\"\n\t"
-                elif isinstance(obj, clef.Bass8vaClef):
-                    post += u"\\clef \"bass^8\"\n\t"
-                elif isinstance(obj, clef.TrebleClef):
-                    post += u"\\clef treble\n\t"
-                elif isinstance(obj, clef.BassClef):
-                    post += u"\\clef bass\n\t"
-                elif isinstance(obj, clef.TenorClef):
-                    post += u"\\clef tenor\n\t"
-                elif isinstance(obj, clef.AltoClef):
-                    post += u"\\clef alto\n\t"
-                else:
-                    raise UnidentifiedObjectError('Clef type not recognized: ' + obj)
             # Time Signature
             elif isinstance(obj, meter.TimeSignature):
                 if invisible:
                     post += u"\\once \\override Staff.TimeSignature #'transparent = ##t\n\t"
 
                 post += u"\\time " + unicode(obj.beatCount) + "/" + \
-                        unicode(obj.denominator) + u"\n\t"
+                    unicode(obj.denominator) + u"\n\t"
             # Key Signature
             elif isinstance(obj, key.KeySignature):
                 pitch_and_mode = obj.pitchAndMode
@@ -630,7 +676,7 @@ class MeasureMaker(LilyPondObjectMaker):
                 # to happen by themselves. Of course, this will have to change once
                 # we have the ability to override the standard barline.
                 if 'regular' != obj.style:
-                    post += u'\n\t' + _barline_to_lily(obj) + u" "
+                    post += u'\n\t' + _barline_to_lily(obj) + u' '
             # PageLayout and SystemLayout
             elif isinstance(obj, layout.SystemLayout) or isinstance(obj, layout.PageLayout):
                 # I don't know what to do with these undocumented features.
@@ -696,10 +742,12 @@ class MeasureMaker(LilyPondObjectMaker):
 
 class AnalysisVoiceMaker(LilyPondObjectMaker):
     """
-    Processes a music21 Part that has the "lily_analysis_voice attribute," and it is True.
+    Processes a music21 Part that has the "lily_analysis_voice attribute" set to True.
 
     This is turned into a Part that has no staff lines, is printed in its score order, and has all
     "lily_markup" attributes attached to 'spacer' notes (i.e., with the letter name "s").
+
+    Each Part should have only Note objects in it.
     """
 
     def _calculate_lily(self):

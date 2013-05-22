@@ -24,6 +24,7 @@
 # Confirmed Requirements:
 import unittest
 from OutputLilyPondTests.TestSettings import test_settings_suite, detect_lilypond_suite
+from OutputLilyPondTests.TestMeasureMaker import test_measure_maker_suite
 from unit_tests import *
 #from old_unit_tests import *
 #from old_integration_tests import *
@@ -40,7 +41,9 @@ if __name__ == '__main__':
     #unittest.TextTestRunner(verbosity=verb).run(pitch_to_lily_suite)
     #unittest.TextTestRunner(verbosity=verb).run(duration_to_lily_suite)
     #unittest.TextTestRunner(verbosity=verb).run(note_to_lily_suite)
-    unittest.TextTestRunner(verbosity=verb).run(barline_to_lily_suite)
+    #unittest.TextTestRunner(verbosity=verb).run(barline_to_lily_suite)
+    #unittest.TextTestRunner(verbosity=verb).run(clef_to_lily_suite)
+    unittest.TextTestRunner(verbosity=verb).run(test_measure_maker_suite)
 
     # Old Tests ---------------------------------------------
     # Unit Tests
