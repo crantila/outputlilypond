@@ -167,8 +167,22 @@ def _clef_to_lily(the_clef, append=u'\n', invisible=False):
         post += u"\\clef tenor"
     elif isinstance(the_clef, clef.AltoClef):
         post += u"\\clef alto"
+    elif isinstance(the_clef, clef.FBaritoneClef):  # NEW
+        post += u"\\clef varbaritone"
+    elif isinstance(the_clef, clef.CBaritoneClef):
+        post += u"\\clef baritone"
+    elif isinstance(the_clef, clef.FrenchViolinClef):
+        post += u"\\clef french"
+    elif isinstance(the_clef, clef.MezzoSopranoClef):
+        post += u"\\clef mezzosoprano"
+    elif isinstance(the_clef, clef.PercussionClef):
+        post += u"\\clef percussion"
+    elif isinstance(the_clef, clef.SopranoClef):
+        post += u"\\clef soprano"
+    elif isinstance(the_clef, clef.SubBassClef):
+        post += u"\\clef subbass"
     else:
-        raise UnidentifiedObjectError('Clef type not recognized: ' + the_clef)
+        raise UnidentifiedObjectError('Clef type not recognized: ' + unicode(the_clef))
 
     return post + append
 

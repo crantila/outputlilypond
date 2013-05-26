@@ -413,8 +413,43 @@ class Test_Clef_to_Lily(unittest.TestCase):
 
     def test_clef_to_lily_12(self):
         # exception
-        bee_ell = "That's five!"
+        bee_ell = clef.NoClef()  # I haven't yet decided what to do with this
         self.assertRaises(UnidentifiedObjectError, _clef_to_lily, bee_ell)
+
+    def test_clef_to_lily_13(self):
+        bee_ell = clef.FBaritoneClef()
+        expected = u"\\clef varbaritone\n"
+        self.assertEqual(_clef_to_lily(bee_ell), expected)
+
+    def test_clef_to_lily_14(self):
+        bee_ell = clef.CBaritoneClef()
+        expected = u"\\clef baritone\n"
+        self.assertEqual(_clef_to_lily(bee_ell), expected)
+
+    def test_clef_to_lily_15(self):
+        bee_ell = clef.FrenchViolinClef()
+        expected = u"\\clef french\n"
+        self.assertEqual(_clef_to_lily(bee_ell), expected)
+
+    def test_clef_to_lily_16(self):
+        bee_ell = clef.MezzoSopranoClef()
+        expected = u"\\clef mezzosoprano\n"
+        self.assertEqual(_clef_to_lily(bee_ell), expected)
+
+    def test_clef_to_lily_17(self):
+        bee_ell = clef.PercussionClef()
+        expected = u"\\clef percussion\n"
+        self.assertEqual(_clef_to_lily(bee_ell), expected)
+
+    def test_clef_to_lily_18(self):
+        bee_ell = clef.SopranoClef()
+        expected = u"\\clef soprano\n"
+        self.assertEqual(_clef_to_lily(bee_ell), expected)
+
+    def test_clef_to_lily_19(self):
+        bee_ell = clef.SubBassClef()
+        expected = u"\\clef subbass\n"
+        self.assertEqual(_clef_to_lily(bee_ell), expected)
 
 
 # Define test suites
