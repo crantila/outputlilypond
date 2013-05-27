@@ -181,6 +181,10 @@ class Test_duration_to_lily(unittest.TestCase):
         # tuplet component--should work
         self.assertEqual(_duration_to_lily(duration.Duration(0.16666666), True), '16')
 
+    def test_duration_to_lily_23(self):
+        # offset of 0.0 -- shouldn't work
+        self.assertRaises(ImpossibleToProcessError, _duration_to_lily, duration.Duration(0.0))
+
 
 class Test_note_to_lily(unittest.TestCase):
     def test_note_to_lily_1(self):

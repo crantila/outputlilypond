@@ -167,7 +167,7 @@ def _clef_to_lily(the_clef, append=u'\n', invisible=False):
         post += u"\\clef tenor"
     elif isinstance(the_clef, clef.AltoClef):
         post += u"\\clef alto"
-    elif isinstance(the_clef, clef.FBaritoneClef):  # NEW
+    elif isinstance(the_clef, clef.FBaritoneClef):
         post += u"\\clef varbaritone"
     elif isinstance(the_clef, clef.CBaritoneClef):
         post += u"\\clef baritone"
@@ -262,6 +262,11 @@ def _duration_to_lily(dur, known_tuplet=False):
     a string
         The LilyPond string corresonding to the duration of this Duration.
     """
+
+    # Every Duration should actually have some duration.
+    if 0.0 == dur.quarterLength:
+        msg = u'_duration_to_lily(): Cannot process quarterLength of 0.0'
+        raise ImpossibleToProcessError(msg)
 
     # First of all, we can't deal with tuplets or multiple-component durations
     # in this method. We need process_measure() to help.
@@ -439,6 +444,8 @@ def _process_stream(the_stream, the_settings):
         # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
         # These objects have lots of metadata, so they'd be pretty useful!
         return ''
+    # TODO: music21.layout.ScoreLayout (as in Lassus duos)
+    # TODO: music21.text.TextBox (as in Lassus duos)
     else:
         # Anything else, we don't know what it is!
         msg = u'Unknown object in Stream: ' + unicode(the_stream)
@@ -722,6 +729,7 @@ class MeasureMaker(LilyPondObjectMaker):
                 else:  # There was a previous Note/Rest, so we're good
                     post += the_marker
                 del the_marker
+            # TODO: music21.layout.StaffLayout (Lassus duos)
             # We don't know what it is, and should probably figure out!
             else:
                 msg = 'Unknown object in Measure ' + unicode(self._as_m21.number) + ': ' + \
