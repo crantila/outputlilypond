@@ -48,7 +48,7 @@ from music21 import instrument
 from music21 import expressions
 from music21.duration import Duration
 # output_LilyPond
-from FileOutput import file_outputter
+#from FileOutput import file_outputter
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
 from LilyPondSettings import LilyPondSettings
 
@@ -568,7 +568,7 @@ class NoteMaker(LilyPondObjectMaker):
 
         # Add a tie if necessary
         if self._as_m21.tie is not None:
-            if self._as_m21.tie.type is 'start':
+            if u'start' == self._as_m21.tie.type:
                 post += u'~'
 
         # Add the \markup{} block, if there is one
