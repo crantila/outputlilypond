@@ -23,8 +23,8 @@
 
 import unittest
 from OutputLilyPond import _octave_num_to_lily, _pitch_to_lily, _duration_to_lily, NoteMaker
-from OutputLilyPond import _barline_to_lily, _clef_to_lily
-from music21 import note, pitch, duration, tie, bar, clef
+from OutputLilyPond import _barline_to_lily, _clef_to_lily, ChordMaker
+from music21 import note, pitch, duration, tie, bar, clef, chord
 # from test_corpus import process_measure_unit
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
 
@@ -456,6 +456,52 @@ class Test_Clef_to_Lily(unittest.TestCase):
         self.assertEqual(_clef_to_lily(bee_ell), expected)
 
 
+class TestChordMaker(unittest.TestCase):
+    def test_chord_maker_1(self):
+        expected = u"<c' e' g'>4"
+        the_chord = chord.Chord('c e g')
+        actual = ChordMaker(the_chord).get_lilypond()
+        self.assertEqual(actual, expected)
+
+    def test_chord_maker_2(self):
+        expected = u"<c' e' g'>16."
+        the_chord = chord.Chord('c e g', quarterLength=0.375)
+        actual = ChordMaker(the_chord).get_lilypond()
+        self.assertEqual(actual, expected)
+
+    def test_chord_maker_3(self):
+        expected = u"<c' e' g'>4__look_at_me!"
+        the_chord = chord.Chord('c e g')
+        the_chord.lily_markup = u'__look_at_me!'
+        actual = ChordMaker(the_chord).get_lilypond()
+        self.assertEqual(actual, expected)
+
+    def test_chord_maker_4(self):
+        expected = u"<c' e' g'>4~"
+        the_chord = chord.Chord('c e g')
+        the_chord.tie = tie.Tie('start')
+        actual = ChordMaker(the_chord).get_lilypond()
+        self.assertEqual(actual, expected)
+
+    def test_chord_maker_5(self):
+        expected = u"<c' e'>1~ <c' e'>2~ <c' e'>4~ <c' e'>8~ <c' e'>16~ <c' e'>32~ <c' e'>64...."
+        the_chord = chord.Chord('c e', quarterLength=7.99609375)
+        actual = ChordMaker(the_chord).get_lilypond()
+        self.assertEqual(actual, expected)
+
+    def test_chord_maker_6(self):
+        expected = u"<c'>4"
+        the_chord = chord.Chord('c')
+        actual = ChordMaker(the_chord).get_lilypond()
+        self.assertEqual(actual, expected)
+
+    def test_chord_maker_7(self):
+        expected = u"<feses, c cisisis ges g' bis'>4"
+        the_chord = chord.Chord('f--2 c3 c###3 g-3 g4 b#4')
+        actual = ChordMaker(the_chord).get_lilypond()
+        self.assertEqual(actual, expected)
+
+
 # Define test suites
 octave_number_to_lily_suite = unittest.TestLoader().loadTestsFromTestCase(Test_octave_num_to_lily)
 pitch_to_lily_suite = unittest.TestLoader().loadTestsFromTestCase(Test_Pitch_to_Lily)
@@ -463,3 +509,4 @@ duration_to_lily_suite = unittest.TestLoader().loadTestsFromTestCase(Test_durati
 note_to_lily_suite = unittest.TestLoader().loadTestsFromTestCase(Test_note_to_lily)
 barline_to_lily_suite = unittest.TestLoader().loadTestsFromTestCase(Test_Barline_to_Lily)
 clef_to_lily_suite = unittest.TestLoader().loadTestsFromTestCase(Test_Clef_to_Lily)
+chord_maker_suite = unittest.TestLoader().loadTestsFromTestCase(TestChordMaker)

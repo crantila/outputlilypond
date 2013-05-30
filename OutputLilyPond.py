@@ -46,6 +46,7 @@ from music21 import tempo
 from music21 import note
 from music21 import instrument
 from music21 import expressions
+from music21 import chord
 from music21.duration import Duration
 # output_LilyPond
 #from FileOutput import file_outputter
@@ -555,6 +556,7 @@ class NoteMaker(LilyPondObjectMaker):
         else:
             the_pitch = _pitch_to_lily(self._as_m21.pitch)
 
+        # NB: From here to the end of the method, it's the same as ChordMaker._calculate_lily()
         # Find the duration
         if len(self._as_m21.duration.components) > 1:
             # We have a multiple-part duration
@@ -565,6 +567,76 @@ class NoteMaker(LilyPondObjectMaker):
         else:
             # Just a straightforward duration
             post = the_pitch + _duration_to_lily(self._as_m21.duration, self._known_tuplet)
+
+        # Add a tie if necessary
+        if self._as_m21.tie is not None:
+            if u'start' == self._as_m21.tie.type:
+                post += u'~'
+
+        # Add the \markup{} block, if there is one
+        if hasattr(self._as_m21, 'lily_markup'):
+            post += unicode(self._as_m21.lily_markup)
+
+        # Done
+        self._as_ly = post
+
+
+class ChordMaker(LilyPondObjectMaker):
+    """
+    Class corresponding to a music21.chord.Chord object. Holds information about the pitch classes,
+    registers, duration, articulation, etc., about a Chord.
+    """
+
+    def __init__(self, m21_obj, known_tuplet=False):
+        """
+        Create a new NoteMaker instance. The constructor pre-calculates the LilyPond format.
+
+        Parameters
+        ----------
+
+        m21_obj : music21.chord.Chord
+            The Chord object to turn into LilyPond source code. There is one special attribute:
+            - lily_markup (string)
+                If this attribute exists, its contents will be passed through unicode() then
+                appended after (to the right of) the rest of the Note/Rest/object's code. The
+                intended purpose is use with the \markup{} command.
+
+        known_tuplet : boolean
+            Whether we know this Note is part of a tuplet. Default is False.
+        """
+        super(ChordMaker, self).__init__(m21_obj)
+        self._known_tuplet = known_tuplet
+
+    def _calculate_lily(self):
+        """
+        Prepare and return the LilyPond source code for this Chord.
+
+        Raises
+        ------
+
+        Any exceptions raised by the following functions will also be raised by this:
+        - _pitch_to_lily()
+        - _duration_to_lily()
+        """
+
+        # Add the pitch letters and register numbers
+        post = u''
+        the_pitches = u'<'
+        for each_pitch in self._as_m21.pitches:
+            the_pitches += _pitch_to_lily(each_pitch) + u' '
+        the_pitches = the_pitches[:-1] + u'>'  # also remove the last space
+
+        # NB: From here to the end of the method, it's the same as NoteMaker._calculate_lily()
+        # Find the duration
+        if len(self._as_m21.duration.components) > 1:
+            # We have a multiple-part duration
+            for durational_component in self._as_m21.duration.components:
+                post += the_pitches + _duration_to_lily(durational_component, self._known_tuplet)
+                post += u'~ '
+            post = post[:-2]
+        else:
+            # Just a straightforward duration
+            post = the_pitches + _duration_to_lily(self._as_m21.duration, self._known_tuplet)
 
         # Add a tie if necessary
         if self._as_m21.tie is not None:
@@ -658,10 +730,12 @@ class MeasureMaker(LilyPondObjectMaker):
                 if attach_this_markup != '':
                     post += attach_this_markup
                     attach_this_markup = ''
+            # Chord
+            elif isinstance(obj, chord.Chord):
+                post += ChordMaker(obj).get_lilypond() + u' '
             # Clef
             elif isinstance(obj, clef.Clef):
                 post += _clef_to_lily(obj, append=u'\n\t', invisible=invisible)
-
             # Time Signature
             elif isinstance(obj, meter.TimeSignature):
                 if invisible:
