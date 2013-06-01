@@ -47,7 +47,8 @@ from music21 import note
 from music21 import instrument
 from music21 import expressions
 from music21 import chord
-from music21.duration import Duration
+from music21 import duration
+#from music21.duration import Duration
 # output_LilyPond
 #from FileOutput import file_outputter
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
@@ -285,7 +286,7 @@ def _duration_to_lily(dur, known_tuplet=False):
             # what's going on. But, in tuplets, the quarterLength doesn't match
             # the type of written note, so we'll make a new Duration with an
             # adjusted quarterLength
-            dur = Duration(dur.type)
+            dur = duration.Duration(dur.type)
         else:
             msg = 'duration_to_lily(): Cannot process tuplet components'
             raise ImpossibleToProcessError(msg)
@@ -665,6 +666,7 @@ class MeasureMaker(LilyPondObjectMaker):
         """
 
         post = u"\t"
+        barcheck_included = False
 
         # Hold whether this Measure is supposed to be "invisible"
         invisible = False
@@ -676,19 +678,14 @@ class MeasureMaker(LilyPondObjectMaker):
             post += u'\stopStaff\n\t'
 
         # first check if it's a partial (pick-up) measure
-        if 0.0 < self._as_m21.duration.quarterLength < self._as_m21.barDuration.quarterLength:
-            # NOTE: This next check could have been done in the first place, but it's
-            # a work-around for what I think is a bug, so I didn't.
-            if round(self._as_m21.duration.quarterLength, 2) < \
-            self._as_m21.barDuration.quarterLength:
-                # But still, we may get something stupid...
-                try:
-                    post += u"\\partial " + _duration_to_lily(self._as_m21.duration) + u"\n\t"
-                except UnidentifiedObjectError:
-                    # ... so if it doesn't work the first time, it may in fact be a
-                    # partial measure; we'll try rounding and see what we can get.
-                    rounded_duration = Duration(round(self._as_m21.duration.quarterLength, 2))
-                    post += u"\\partial " + _duration_to_lily(rounded_duration) + u"\n\t"
+        bar_dur = self._as_m21.barDuration.quarterLength
+        my_dur = self._as_m21.duration.quarterLength
+        if round(my_dur, 2) < bar_dur:
+            if self._as_m21.duration.components is not None:
+                rounded = duration.Duration(round(my_dur, 2))
+                post += u"\\partial " + _duration_to_lily(rounded) + u"\n\t"
+            else:
+                post += u"\\partial " + _duration_to_lily(self._as_m21.duration) + u"\n\t"
 
         # Make self._as_m21 an iterable, so we can pull in multiple elements when we need to deal
         # with tuplets.
@@ -758,11 +755,12 @@ class MeasureMaker(LilyPondObjectMaker):
                         u" \\major\n\t"
             # Barline
             elif isinstance(obj, bar.Barline):
-                # There's no need to write down a regular barline, because they tend
-                # to happen by themselves. Of course, this will have to change once
-                # we have the ability to override the standard barline.
+                # We don't need to write down a regular barline, but either way, we definitely
+                # should include a bar-check symbol
+                post += u'|\n'
+                barcheck_included = True
                 if 'regular' != obj.style:
-                    post += u'\n\t' + _barline_to_lily(obj) + u' '
+                    post += u'\t' + _barline_to_lily(obj) + u'\n'
             # PageLayout and SystemLayout
             elif isinstance(obj, layout.SystemLayout) or isinstance(obj, layout.PageLayout):
                 # I don't know what to do with these undocumented features.
@@ -812,8 +810,8 @@ class MeasureMaker(LilyPondObjectMaker):
                 print('   its type is ' + unicode(type(obj)))  # DEBUG
                 #raise UnidentifiedObjectError(msg)
 
-        # Append a bar-check symbol, if there was anything outputted.
-        if len(post) > 1:
+        # Append a bar-check symbol, if relevant
+        if len(post) > 1 and not barcheck_included:
             post += u"|\n"
 
         # Append a note if we couldn't include a \markup{} block
@@ -1065,7 +1063,7 @@ class ScoreMaker(LilyPondObjectMaker):
 
         # Things Before Parts
         # Our mark!
-        post = u'% LilyPond output from music21 via "output_LilyPond.py"\n'
+        post = u'% LilyPond output from music21 via "OutputLilyPond"\n'
         # Version
         post += u'\\version "' + self._setts.get_property('lilypond_version') + u'"\n\n'
         # Set paper size
