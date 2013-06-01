@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Name:         __init__.py for OutputLilyPond
-# Purpose:      Imports OutputLilyPond for a client program
+# Filename: __init__.py for OutputLilyPond
+# Purpose: Import OutputLilyPond for a client program
 #
-# Copyright (C) 2012 Christopher Antila
+# Copyright (C) 2012, 2013 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,6 +24,6 @@
 Import everything needed to use the OutputLilyPond module in a client program.
 """
 
-__all__ = ['FileOutput', 'LilyPondProblems', 'LilyPondSettings', 'OutputLilyPond']
+__all__ = ['LilyPondProblems', 'LilyPondSettings', 'OutputLilyPond']
 
 from OutputLilyPond import *

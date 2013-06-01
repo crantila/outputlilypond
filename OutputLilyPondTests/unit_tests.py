@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Name:         output_LilyPond-test.py
-# Purpose:      Unit tests for output_LilyPond.py
+# Filename: unit_tests.py
+# Purpose: Unit tests for OutputLilyPond
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #

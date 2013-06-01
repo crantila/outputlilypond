@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Program Name:              output_LilyPond
-# Program Description:       Outputs music21 Objects into LilyPond Format
-#
 # Filename: test_corpus/__init__.py
-# Purpose: Import the Native music21 Tests
+# Purpose: Import the Native music21 Tests for OutputLilyPond
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #

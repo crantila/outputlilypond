@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Name:         output_LilyPond-test.py
-# Purpose:      Unit tests for output_LilyPond.py
+# Filename: TestProcessStream.py
+# Purpose: Integration Tests for _process_stream()
 #
-# Copyright (C) 2012 Christopher Antila
+# Copyright (C) 2012, 2013 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

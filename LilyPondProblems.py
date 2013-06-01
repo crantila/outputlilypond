@@ -3,7 +3,7 @@
 
 #-------------------------------------------------------------------------------
 # Filename: LilyPondProblems.py
-# Purpose: Exceptions and Errors for output_LilyPond
+# Purpose: Exceptions and Errors for OutputLilyPond
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #

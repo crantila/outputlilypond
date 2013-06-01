@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Program Name:              output_LilyPond
-# Program Description:       Outputs music21 Objects into LilyPond Format
-#
 # Filename: test_corpus/process_measure_unit.py
-# Purpose: Purpose-built music21 snippets for unit testing process_measure()
+# Purpose: Purpose-built music21 snippets for unit testing MeasureMaker()
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #

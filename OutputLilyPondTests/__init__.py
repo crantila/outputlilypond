@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Name:         __init__.py for OutputLilyPondTests
-# Purpose:      Imports OutputLilyPondTests for a client program
+# Filename: __init__.py for OutputLilyPondTests
+# Purpose: Import OutputLilyPond tests for a client program
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #

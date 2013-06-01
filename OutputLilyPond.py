@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Name:         OutputLilyPond.py
-# Purpose:      Outputs music21 Objects into LilyPond Format
+# Filename: OutputLilyPond.py
+# Purpose: Outputs music21 Objects into LilyPond Format
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #

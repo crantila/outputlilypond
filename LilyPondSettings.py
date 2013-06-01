@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Name:         LilyPondSettings.py
-# Purpose:     Manages the runtime settings for OutputLilyPond
+# Filename: LilyPondSettings.py
+# Purpose: Manages the runtime settings for OutputLilyPond
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #

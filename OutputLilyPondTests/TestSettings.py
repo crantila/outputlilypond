@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Name:         TestSettings.py
-# Purpose:      Unit tests for VISSettings
+# Filename: TestSettings.py
+# Purpose: Unit tests for VISSettings
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #

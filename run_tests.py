@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Name:         output_LilyPond-run_tests.py
-# Purpose:      Runs automated tests for output_LilyPond.py
+# Filename: run_tests.py
+# Purpose: Run automated tests for OutputLilyPond.py
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #

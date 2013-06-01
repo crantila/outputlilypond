@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 #-------------------------------------------------------------------------------
-# Name:         TestProcessMeasure.py
-# Purpose:      Integration tests for MeasureMaker
+# Filename: TestProcessMeasure.py
+# Purpose: Integration tests for MeasureMaker
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #
