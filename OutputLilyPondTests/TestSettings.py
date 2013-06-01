@@ -42,8 +42,8 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(self.s._secret_settings['print_instrument_names'], True)
         self.assertEqual(self.s._secret_settings['paper_size'], 'letter')
         self.assertEqual(self.s._secret_settings['lilypond_path'], '/usr/bin/lilypond')
-        self.assertEqual(self.s._secret_settings['lilypond_version'], '2.16.1')
-        self.assertEqual(self.s._secret_settings['lilypond_version_numbers'], (2, 16, 1))
+        self.assertEqual(self.s._secret_settings['lilypond_version'], '2.16.0')
+        self.assertEqual(self.s._secret_settings['lilypond_version_numbers'], (2, 16, 0))
 
     # "set"
     def test_set_property_1(self):
@@ -130,8 +130,8 @@ class Test_Detect_LilyPond(unittest.TestCase):
     # detect_lilypond() -------------------------------------
     def test_for_path(self):
         # NB: You have to write in your path and version!
-        my_path = '/usr/bin/lilypond'
-        my_version = '2.16.1'
+        my_path = u'/usr/bin/lilypond'
+        my_version = u'2.16.0'
         res = LilyPondSettings.detect_lilypond()
         self.assertEqual(res[0], my_path)
         self.assertEqual(res[1], my_version)

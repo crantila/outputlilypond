@@ -21,20 +21,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-# Confirmed Requirements:
 import unittest
 from OutputLilyPondTests.TestSettings import test_settings_suite, detect_lilypond_suite
 from OutputLilyPondTests.TestMeasureMaker import test_measure_maker_suite
-from unit_tests import *
-#from old_unit_tests import *
-#from old_integration_tests import *
+from OutputLilyPondTests.unit_tests import octave_number_to_lily_suite, pitch_to_lily_suite, \
+    duration_to_lily_suite, note_to_lily_suite, barline_to_lily_suite, clef_to_lily_suite, \
+    chord_maker_suite
+from OutputLilyPondTests.TestProcessStream import process_stream_part_suite
 
 #-------------------------------------------------------------------------------
 # "Main" Function
 #-------------------------------------------------------------------------------
 if __name__ == '__main__':
     verb = 1
-    # New Tests ---------------------------------------------
+
+    # Unit Tests
     unittest.TextTestRunner(verbosity=verb).run(test_settings_suite)
     unittest.TextTestRunner(verbosity=verb).run(detect_lilypond_suite)
     unittest.TextTestRunner(verbosity=verb).run(octave_number_to_lily_suite)
@@ -43,20 +44,11 @@ if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=verb).run(note_to_lily_suite)
     unittest.TextTestRunner(verbosity=verb).run(barline_to_lily_suite)
     unittest.TextTestRunner(verbosity=verb).run(clef_to_lily_suite)
-    unittest.TextTestRunner(verbosity=verb).run(test_measure_maker_suite)
     unittest.TextTestRunner(verbosity=verb).run(chord_maker_suite)
 
-    # Old Tests ---------------------------------------------
-    # Unit Tests
-    #unittest.TextTestRunner( verbosity = 1 ).run( t_o_n_t_l )
-    #unittest.TextTestRunner( verbosity = 1 ).run( t_p_t_l )
-    #unittest.TextTestRunner( verbosity = 1 ).run( t_d_t_l )
-    #unittest.TextTestRunner( verbosity = 1 ).run( t_n_t_l )
-    #unittest.TextTestRunner( verbosity = 1 ).run( t_b_t_l )
-    #unittest.TextTestRunner( verbosity = 1 ).run( t_p_m )
-
-    ## Run Integration Tests
-    #unittest.TextTestRunner( verbosity = 1 ).run( process_stream_part_suite )
+    # Integration Tests
+    unittest.TextTestRunner(verbosity=verb).run(test_measure_maker_suite)
+    unittest.TextTestRunner(verbosity=verb).run(process_stream_part_suite)
 
 # TODO: Testing
 # - providing a filename to process_score() actually outputs there

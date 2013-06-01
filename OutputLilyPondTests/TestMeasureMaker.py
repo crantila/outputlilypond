@@ -3,7 +3,7 @@
 
 #-------------------------------------------------------------------------------
 # Name:         TestProcessMeasure.py
-# Purpose:      Unit tests for MeasureMaker
+# Purpose:      Integration tests for MeasureMaker
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #
@@ -22,13 +22,15 @@
 #-------------------------------------------------------------------------------
 
 import unittest
-#from OutputLilyPond.test_corpus import
+from test_corpus import process_measure_unit
 from music21 import stream, key, note, meter, converter
 from OutputLilyPond import MeasureMaker
 
 
 class TestMeasureMaker(unittest.TestCase):
     def test_modeless_key_signature(self):
+        # Silly example, unfortunately, that means we need a barcheck symbol even though there
+        # were no events
         meas = stream.Measure()
         meas.append(key.KeySignature(-3))
         actual = MeasureMaker(meas)
@@ -48,22 +50,19 @@ class TestMeasureMaker(unittest.TestCase):
         actual = MeasureMaker(test_in1)
         self.assertEqual(actual.get_lilypond(), expect)
 
-    #def test_some_tuplets_2(self):
-        ## Incomplete measure starts with tuplets
-        ## TODO: currently this fails because the duration of the three triplets is
-        ## 0.49999 and that's not equal to the 0.5 qL it should have. This is a
-        ## problem in duration_to_lily()
-        #test_in1 = stream.Measure()
-        #test_in1.timeSignature = meter.TimeSignature('4/4')
-        #test_in1.append(note.Note('C4', quarterLength=0.16666))
-        #test_in1.append(note.Note('D4', quarterLength=0.16666))
-        #test_in1.append(note.Note('E4', quarterLength=0.16666))
-        #expect = """\t\partial 8
-#\t\\time 4/4
-#\t\\times 2/3 { c'16 d'16 e'16 } |
-#"""
-        #actual = MeasureMaker(test_in1)
-        #self.assertEqual(actual.get_lilypond(), expect)
+    def test_some_tuplets_2(self):
+        # Partial measure starts with tuplets (multiple components)
+        test_in1 = stream.Measure()
+        test_in1.timeSignature = meter.TimeSignature('4/4')
+        test_in1.append(note.Note('C4', quarterLength=0.16666))
+        test_in1.append(note.Note('D4', quarterLength=0.16666))
+        test_in1.append(note.Note('E4', quarterLength=0.16666))
+        expect = """\t\partial 8
+\t\\time 4/4
+\t\\times 2/3 { c'16 d'16 e'16 } |
+"""
+        actual = MeasureMaker(test_in1)
+        self.assertEqual(actual.get_lilypond(), expect)
 
     def test_bwv77_bass_part_1(self):
         bass_part = converter.parse('test_corpus/bwv77.mxl').parts[3]
@@ -80,90 +79,92 @@ class TestMeasureMaker(unittest.TestCase):
         expect = u'\tb4 a4 g4 fis4 |\n'
         self.assertEqual(actual.get_lilypond(), expect)
 
-    #def test_bwv77_bass_part_3(self):
-        #bass_part = converter.parse('test_corpus/bwv77.mxl').parts[3]
-        ## final measure
-        #actual = MeasureMaker(bass_part[-1])
-        #expect = u'\t\\partial 2.\n\tg8 e8 fis4 b,4\n\t\\bar "|." |\n'
-        #self.assertEqual(actual.get_lilypond(), expect)
+    def test_bwv77_bass_part_3(self):
+        bass_part = converter.parse('test_corpus/bwv77.mxl').parts[3]
+        # final measure
+        actual = MeasureMaker(bass_part[-1])
+        expect = u'\t\\partial 2.\n\tg8 e8 fis4 b,4 |\n\t\\bar "|."\n'
+        self.assertEqual(actual.get_lilypond(), expect)
 
-    #def test_invisibility_1(self):
-        ## test the .lily_invisible property, which should cause everything in a
-        ## Measure to have the #'transparent property set to ##t
-        #expected = '''\t\\stopStaff
-    #\t\\once \\override Staff.TimeSignature #'transparent = ##t
-    #\t\\time 4/4
-    #\ts1 |
-    #\t\\startStaff
-    #'''
-        #self.assertEqual(process_measure(process_measure_unit.invisibility_1),\
-                            #expected)
+    def test_invisibility_1(self):
+        # test the .lily_invisible property, which should cause everything in a Measure to have
+        # the #'transparent property set to ##t
+        actual = MeasureMaker(process_measure_unit.invisibility_1)
+        expect = u'''\t\\stopStaff
+\t\\once \\override Staff.TimeSignature #'transparent = ##t
+\t\\time 4/4
+\ts1 |
+\t\\startStaff
+'''
+        self.assertEqual(actual.get_lilypond(), expect)
 
-    #def test_invisibility_2(self):
-        ## test the .lily_invisible property, which should cause everything in a
-        ## Measure to have the #'transparent property set to ##t
-        #expected = '''\t\\stopStaff
-    #\t\\once \\override Staff.TimeSignature #'transparent = ##t
-    #\t\\time 4/4
-    #\t\\once \\override Staff.KeySignature #'transparent = ##t
-    #\t\\key b \\major
-    #\ts1 |
-    #\t\\startStaff
-    #'''
-        #self.assertEqual(process_measure(process_measure_unit.invisibility_2),\
-                            #expected)
+    def test_invisibility_2(self):
+        # test the .lily_invisible property, which should cause everything in a Measure to have
+        # the #'transparent property set to ##t
+        actual = MeasureMaker(process_measure_unit.invisibility_2)
+        expect = '''\t\\stopStaff
+\t\\once \\override Staff.TimeSignature #'transparent = ##t
+\t\\time 4/4
+\t\\once \\override Staff.KeySignature #'transparent = ##t
+\t\\key b \\major
+\ts1 |
+\t\\startStaff
+'''
+        self.assertEqual(actual.get_lilypond(), expect)
 
-    #def test_invisibility_3(self):
-        ## test the .lily_invisible property, which should cause everything in a
-        ## Measure to have the #'transparent property set to ##t
-        #expected = '''\t\\stopStaff
-    #\t\\once \\override Staff.TimeSignature #'transparent = ##t
-    #\t\\time 4/4
-    #\t\\once \\override Staff.KeySignature #'transparent = ##t
-    #\t\\key b \\major
-    #\t\\once \\override Staff.Clef #'transparent = ##t
-    #\t\\clef treble
-    #\ts1 |
-    #\t\\startStaff
-    #'''
-        #self.assertEqual(process_measure(process_measure_unit.invisibility_3),\
-                            #expected)
+    def test_invisibility_3(self):
+        # test the .lily_invisible property, which should cause everything in a Measure to have
+        # the #'transparent property set to ##t
+        actual = MeasureMaker(process_measure_unit.invisibility_3)
+        expect = '''\t\\stopStaff
+\t\\once \\override Staff.TimeSignature #'transparent = ##t
+\t\\time 4/4
+\t\\once \\override Staff.KeySignature #'transparent = ##t
+\t\\key b \\major
+\t\\once \\override Staff.Clef #'transparent = ##t
+\t\\clef treble
+\ts1 |
+\t\\startStaff
+'''
+        self.assertEqual(actual.get_lilypond(), expect)
 
-    #def test_exception_1(self):
-        ## There's a Measure in this Measure, which should raise an exception
-        ## because we don't expect one
-        #self.assertRaises(UnidentifiedObjectError, process_measure, \
-                            #process_measure_unit.exception_1)
+    def test_ave_maris_stella_1(self):
+        # "ams" is "ave maris stella"... what were you thinking?
+        ams = converter.parse('test_corpus/Jos2308.krn')
+        # First four measures, second highest part
+        actual = MeasureMaker(ams.parts[1][9]).get_lilypond()
+        actual += MeasureMaker(ams.parts[1][10]).get_lilypond()
+        actual += MeasureMaker(ams.parts[1][11]).get_lilypond()
+        actual += MeasureMaker(ams.parts[1][12]).get_lilypond()
+        expect = u"""\t\clef treble
+\t\key f \major
+\t\\time 2/1
+\tr1 g'1 |
+\td''1 r1 |
+\tg'1 d''1~ |
+\td''2 c''2 bes'2 a'2 |
+"""
+        self.assertEqual(actual, expect)
 
-    #def test_ave_maris_stella(self):
-    # TODO: turn this into a unit test by processing only one measure at a time
-        ## "ams" is "ave maris stella"... what were you thinking?
-        #ams = converter.parse('test_corpus/Jos2308.krn')
-        ## First four measures, second highest part
-        #first_test = """\t\clef treble
-    #\t\key f \major
-    #\t\\time 2/1
-    #\tr1 g'1 |
-    #\td''1 r1 |
-    #\tg'1 d''1~ |
-    #\td''2 c''2 bes'2 a'2 |
-    #"""
-        #result = process_measure(ams[1][7]) + process_measure(ams[1][8]) + \
-            #process_measure(ams[1][9]) + process_measure(ams[1][10])
-        #self.assertEqual(result, first_test)
-        ## Measures 125-7, lowest part
-        #second_test = """\tg\\breve~ |
-    #\tg\\breve \\bar "||" |
-    #\tR\\breve |
-    #"""
-        #result = process_measure(ams[3][131]) + process_measure(ams[3][132]) + \
-            #process_measure(ams[3][133])
-        #self.assertEqual(result, second_test)
-        ## Measure 107, second-lowest part (tuplets)
-        #third_test = "\t\\times 2/3 { e'1 c'1 d'1 } |\n"
-        ##print(str(ams[2][113].duration.quarterLength) + ' andza ' + str(ams[2][113].barDuration.quarterLength))
-        #result = process_measure(ams[2][113])
-        #self.assertEqual(result, third_test)
+    def test_ave_maris_stella_2(self):
+        ams = converter.parse('test_corpus/Jos2308.krn')
+        # Measures 125-7, lowest part
+        actual = MeasureMaker(ams.parts[3][133]).get_lilypond()
+        actual += MeasureMaker(ams.parts[3][134]).get_lilypond()
+        actual += MeasureMaker(ams.parts[3][135]).get_lilypond()
+        expect = u"""\tg\\breve~ |
+\tg\\breve |
+\t\\bar "||"
+\tR\\breve |
+"""
+        self.assertEqual(actual, expect)
+
+    def test_ave_maris_stella_3(self):
+        ams = converter.parse('test_corpus/Jos2308.krn')
+        # Measure 107, second-lowest part (tuplets)
+        actual = MeasureMaker(ams.parts[2][115]).get_lilypond()
+        expect = u"\t\\times 2/3 { e'1 c'1 d'1 } |\n"
+        self.assertEqual(actual, expect)
 
 
 #-------------------------------------------------------------------------------

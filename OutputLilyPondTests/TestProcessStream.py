@@ -21,25 +21,22 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
-# Confirmed Requirements:
 import unittest
-from OutputLilyPond import *
+from OutputLilyPond import _process_stream
 from LilyPondSettings import LilyPondSettings
-from music21 import note, pitch, duration, converter, tie, key
+from music21 import converter
 
 
-
-#-------------------------------------------------------------------------------
-class Test_Process_Stream_Part( unittest.TestCase ):
-   # NOTE: We have to pull a bit of trickery here, because there is some
-   # randomness involved in part names.
-   def test_first_measures_of_bach( self ):
-      # first two measures of soprano part
-      the_settings = LilyPondSettings()
-      the_score = converter.parse( 'test_corpus/bwv77.mxl' )
-      actual = process_stream( the_score[1][:3], the_settings )
-      actual = actual[8:] # remove the randomized part name
-      expected = """ =
+class Test_Process_Stream_Part(unittest.TestCase):
+    # NOTE: We have to pull a bit of trickery here, because there is some
+    # randomness involved in part names.
+    def test_first_measures_of_bach(self):
+        # first two measures of soprano part
+        the_settings = LilyPondSettings()
+        the_score = converter.parse('test_corpus/bwv77.mxl')
+        actual = _process_stream(the_score.parts[0][:3], the_settings)
+        actual = actual[8:]  # remove the randomized part name
+        expect = u""" =
 {
 \t%% Soprano
 \t\set Staff.instrumentName = \markup{ "Soprano" }
@@ -52,16 +49,15 @@ class Test_Process_Stream_Part( unittest.TestCase ):
 \tg'4 a'4 b'4 a'4 |
 }
 """
-      self.assertEqual( actual, expected )
-   # ------------------------------------------------------
+        self.assertEqual(actual, expect)
 
-   def test_first_measures_of_Josquin( self ):
-      # first three measures of highest part
-      the_settings = LilyPondSettings()
-      the_score = converter.parse( 'test_corpus/Jos2308.krn' )
-      actual = process_stream( the_score[0][:10], the_settings )
-      actual = actual[8:] # remove the randomized part name
-      expected = """ =
+    def test_first_measures_of_Josquin(self):
+        # first three measures of highest part
+        the_settings = LilyPondSettings()
+        the_score = converter.parse('test_corpus/Jos2308.krn')
+        actual = _process_stream(the_score.parts[0][:12], the_settings)
+        actual = actual[8:]  # remove the randomized part name
+        expect = u""" =
 {
 \t\clef treble
 \t\key f \major
@@ -71,11 +67,8 @@ class Test_Process_Stream_Part( unittest.TestCase ):
 \td''1 r1 |
 }
 """
-      self.assertEqual( actual, expected )
-   # ------------------------------------------------------
-#-------------------------------------------------------------------------------
-
+        self.assertEqual(actual, expect)
 
 
 # Define test suites
-process_stream_part_suite = unittest.TestLoader().loadTestsFromTestCase( Test_Process_Stream_Part )
+process_stream_part_suite = unittest.TestLoader().loadTestsFromTestCase(Test_Process_Stream_Part)

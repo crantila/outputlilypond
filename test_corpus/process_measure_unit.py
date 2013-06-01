@@ -24,55 +24,28 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
+from music21 import stream, note, meter, key, clef
 
-
-from music21.stream import Part, Score, Measure
-from music21.note import Note, Rest
-from music21.meter import TimeSignature
-from music21.key import KeySignature
-from music21 import clef
-
-
-
-#-------------------------------------------------------------------------------
 # Everything in the Measure should be invisible... we have only one Rest and one
 # TimeSignature
-invisibility_1 = Measure()
-invisibility_1.append( TimeSignature( '4/4' ) )
-invisibility_1.append( Rest( quarterLength=4.0 ) )
+invisibility_1 = stream.Measure()
+invisibility_1.append(meter.TimeSignature('4/4'))
+invisibility_1.append(note.Rest(quarterLength=4.0))
 invisibility_1.lily_invisible = True
-#-------------------------------------------------------------------------------
 
-
-
-#-------------------------------------------------------------------------------
 # Everything in the Measure should be invisible... we have a Rest, a
 # TimeSignature, and a KeySignature
-invisibility_2 = Measure()
-invisibility_2.append( TimeSignature( '4/4' ) )
-invisibility_2.append( KeySignature( 5 ) )
-invisibility_2.append( Rest( quarterLength=4.0 ) )
+invisibility_2 = stream.Measure()
+invisibility_2.append(meter.TimeSignature('4/4'))
+invisibility_2.append(key.KeySignature(5))
+invisibility_2.append(note.Rest(quarterLength=4.0))
 invisibility_2.lily_invisible = True
-#-------------------------------------------------------------------------------
 
-
-
-#-------------------------------------------------------------------------------
 # Everything in the Measure should be invisible... we have a Rest, a
 # TimeSignature, a KeySignature, and a Clef
-invisibility_3 = Measure()
-invisibility_3.append( TimeSignature( '4/4' ) )
-invisibility_3.append( KeySignature( 5 ) )
-invisibility_3.append( clef.TrebleClef() )
-invisibility_3.append( Rest( quarterLength=4.0 ) )
+invisibility_3 = stream.Measure()
+invisibility_3.append(meter.TimeSignature('4/4'))
+invisibility_3.append(key.KeySignature(5))
+invisibility_3.append(clef.TrebleClef())
+invisibility_3.append(note.Rest(quarterLength=4.0))
 invisibility_3.lily_invisible = True
-#-------------------------------------------------------------------------------
-
-
-
-#-------------------------------------------------------------------------------
-# This should raise an error because we shouldn't have a Measure in a Measure
-exception_1 = Measure()
-exception_1.append( TimeSignature( '4/4' ) )
-exception_1.append( Measure() )
-#-------------------------------------------------------------------------------
