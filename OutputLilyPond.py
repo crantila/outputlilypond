@@ -34,20 +34,8 @@ from subprocess import Popen, PIPE  # for running bash things
 import random
 from itertools import repeat
 # music21
-from music21 import clef
-from music21 import meter
-from music21 import key
-from music21 import stream
-from music21 import metadata
-from music21 import layout
-from music21 import bar
-from music21 import humdrum
-from music21 import tempo
-from music21 import note
-from music21 import instrument
-from music21 import expressions
-from music21 import chord
-from music21 import duration
+from music21 import clef, meter, key, stream, metadata, layout, bar, humdrum, tempo, note, \
+    instrument, expressions, chord, duration, text
 #from music21.duration import Duration
 # output_LilyPond
 #from FileOutput import file_outputter
@@ -148,45 +136,29 @@ def _clef_to_lily(the_clef, append=u'\n', invisible=False):
     UnidentifiedObjectError
         If the Clef is not of a known type.
     """
-    post = u''
+    post = u"\\once \\override Staff.Clef #'transparent = ##t" + append if invisible else u''
 
-    if invisible:
-        post += u"\\once \\override Staff.Clef #'transparent = ##t" + append
+    clef_dict = {clef.Treble8vbClef: u"\\clef \"treble_8\"",
+                 clef.Treble8vaClef: u"\\clef \"treble^8\"",
+                 clef.Bass8vbClef: u"\\clef \"bass_8\"",
+                 clef.Bass8vaClef: u"\\clef \"bass^8\"",
+                 clef.TrebleClef: u"\\clef treble",
+                 clef.BassClef: u"\\clef bass",
+                 clef.TenorClef: u"\\clef tenor",
+                 clef.AltoClef: u"\\clef alto",
+                 clef.FBaritoneClef: u"\\clef varbaritone",
+                 clef.CBaritoneClef: u"\\clef baritone",
+                 clef.FrenchViolinClef: u"\\clef french",
+                 clef.MezzoSopranoClef: u"\\clef mezzosoprano",
+                 clef.PercussionClef: u"\\clef percussion",
+                 clef.SopranoClef: u"\\clef soprano",
+                 clef.SubBassClef: u"\\clef subbass"}
 
-    if isinstance(the_clef, clef.Treble8vbClef):
-        post += u"\\clef \"treble_8\""
-    elif isinstance(the_clef, clef.Treble8vaClef):
-        post += u"\\clef \"treble^8\""
-    elif isinstance(the_clef, clef.Bass8vbClef):
-        post += u"\\clef \"bass_8\""
-    elif isinstance(the_clef, clef.Bass8vaClef):
-        post += u"\\clef \"bass^8\""
-    elif isinstance(the_clef, clef.TrebleClef):
-        post += u"\\clef treble"
-    elif isinstance(the_clef, clef.BassClef):
-        post += u"\\clef bass"
-    elif isinstance(the_clef, clef.TenorClef):
-        post += u"\\clef tenor"
-    elif isinstance(the_clef, clef.AltoClef):
-        post += u"\\clef alto"
-    elif isinstance(the_clef, clef.FBaritoneClef):
-        post += u"\\clef varbaritone"
-    elif isinstance(the_clef, clef.CBaritoneClef):
-        post += u"\\clef baritone"
-    elif isinstance(the_clef, clef.FrenchViolinClef):
-        post += u"\\clef french"
-    elif isinstance(the_clef, clef.MezzoSopranoClef):
-        post += u"\\clef mezzosoprano"
-    elif isinstance(the_clef, clef.PercussionClef):
-        post += u"\\clef percussion"
-    elif isinstance(the_clef, clef.SopranoClef):
-        post += u"\\clef soprano"
-    elif isinstance(the_clef, clef.SubBassClef):
-        post += u"\\clef subbass"
+    clef_type = type(the_clef)
+    if clef_type in clef_dict:
+        return post + clef_dict[clef_type] + append
     else:
         raise UnidentifiedObjectError('Clef type not recognized: ' + unicode(the_clef))
-
-    return post + append
 
 
 def _string_of_n_letters(n):
@@ -235,11 +207,8 @@ def _barline_to_lily(barline):
         'heavy': u"|.|", 'double': u"||", 'final': u"|.", 'heavy-light': u".|",
         'heavy-heavy': u".|.", 'tick': u"'", 'short': u"'", 'none': u""}
 
-    post = u'\\bar "'
-
     if barline.style in dictionary_of_barlines:
-        post += dictionary_of_barlines[barline.style] + u'"'
-        return post
+        return u'\\bar "' + dictionary_of_barlines[barline.style] + u'"'
     else:
         start_msg = 'Barline type not recognized ('
         raise UnidentifiedObjectError(start_msg + barline.style + ')')
@@ -307,15 +276,15 @@ def _duration_to_lily(dur, known_tuplet=False):
     else:
         # We have to figure out the largest value that will fit, then append the
         # correct number of dots.
-        post = ''
+        post = None
         for durat in list_of_durations:
             if (dur_ql - durat) > 0.0:
-                post += dictionary_of_durations[durat]
+                post = dictionary_of_durations[durat]
                 break
 
         # For every dot in this Duration, append a '.' to "post"
         for _ in repeat(None, dur.dots):
-            post += '.'
+            post += u'.'
 
         return post
 
@@ -423,31 +392,34 @@ def _process_stream(the_stream, the_settings):
     UnidentifiedObjectError
         When the object is of a type not supported by this function.
     """
+    obj_type = type(the_stream)
 
-    if isinstance(the_stream, stream.Score):
+    if obj_type == stream.Score:
         return ScoreMaker(the_stream, the_settings).get_lilypond()
-    elif isinstance(the_stream, stream.Part):
+    elif obj_type == stream.Part:
         return PartMaker(the_stream, the_settings).get_lilypond()
-    elif isinstance(the_stream, metadata.Metadata):
+    elif obj_type == metadata.Metadata:
         return MetadataMaker(the_stream, the_settings).get_lilypond()
-    elif isinstance(the_stream, layout.StaffGroup):
+    elif obj_type == layout.StaffGroup:
         # TODO: Figure out how to use this by reading documentation
-        return ''
-    elif isinstance(the_stream, humdrum.spineParser.MiscTandem):
+        return u''
+    elif obj_type == humdrum.spineParser.MiscTandem:
         # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
         # Is there really nothing we can use this for? Seems like these exist only to help
         # the music21 developers.
-        return ''
-    elif isinstance(the_stream, humdrum.spineParser.GlobalReference):
+        return u''
+    elif obj_type == humdrum.spineParser.GlobalReference:
         # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
         # These objects have lots of metadata, so they'd be pretty useful!
-        return ''
-    elif isinstance(the_stream, humdrum.spineParser.GlobalComment):
+        return u''
+    elif obj_type == humdrum.spineParser.GlobalComment:
         # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
         # These objects have lots of metadata, so they'd be pretty useful!
-        return ''
-    # TODO: music21.layout.ScoreLayout (as in Lassus duos)
-    # TODO: music21.text.TextBox (as in Lassus duos)
+        return u''
+    elif obj_type == layout.ScoreLayout:  # TODO: this (as in Lassus duos)
+        return u''
+    elif obj_type == text.TextBox:  # TODO: this (as in Lassus duos)
+        return u''
     else:
         # Anything else, we don't know what it is!
         msg = u'Unknown object in Stream: ' + unicode(the_stream)
@@ -562,8 +534,8 @@ class NoteMaker(LilyPondObjectMaker):
         if len(self._as_m21.duration.components) > 1:
             # We have a multiple-part duration
             for durational_component in self._as_m21.duration.components:
-                post += the_pitch + _duration_to_lily(durational_component, self._known_tuplet)
-                post += u'~ '
+                post += the_pitch + _duration_to_lily(durational_component, self._known_tuplet) + \
+                    u'~ '
             post = post[:-2]
         else:
             # Just a straightforward duration
