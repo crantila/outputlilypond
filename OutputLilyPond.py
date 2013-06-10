@@ -534,21 +534,24 @@ class NoteMaker(LilyPondObjectMaker):
         if len(self._as_m21.duration.components) > 1:
             # We have a multiple-part duration
             for durational_component in self._as_m21.duration.components:
-                post += the_pitch + _duration_to_lily(durational_component, self._known_tuplet) + \
-                    u'~ '
+                post = u''.join([post,
+                    the_pitch,
+                    _duration_to_lily(durational_component, self._known_tuplet),
+                    u'~ '])
             post = post[:-2]
         else:
             # Just a straightforward duration
-            post = the_pitch + _duration_to_lily(self._as_m21.duration, self._known_tuplet)
+            post = u''.join([the_pitch,
+                _duration_to_lily(self._as_m21.duration, self._known_tuplet)])
 
         # Add a tie if necessary
         if self._as_m21.tie is not None:
             if u'start' == self._as_m21.tie.type:
-                post += u'~'
+                post = u''.join([post, u'~'])
 
         # Add the \markup{} block, if there is one
         if hasattr(self._as_m21, 'lily_markup'):
-            post += unicode(self._as_m21.lily_markup)
+            post = u''.join([post, unicode(self._as_m21.lily_markup)])
 
         # Done
         self._as_ly = post
@@ -596,29 +599,32 @@ class ChordMaker(LilyPondObjectMaker):
         post = u''
         the_pitches = u'<'
         for each_pitch in self._as_m21.pitches:
-            the_pitches += _pitch_to_lily(each_pitch) + u' '
-        the_pitches = the_pitches[:-1] + u'>'  # also remove the last space
+            the_pitches = u''.join([the_pitches, _pitch_to_lily(each_pitch), u' '])
+        the_pitches = u''.join([the_pitches[:-1], u'>'])  # also remove the last space
 
         # NB: From here to the end of the method, it's the same as NoteMaker._calculate_lily()
         # Find the duration
         if len(self._as_m21.duration.components) > 1:
             # We have a multiple-part duration
             for durational_component in self._as_m21.duration.components:
-                post += the_pitches + _duration_to_lily(durational_component, self._known_tuplet)
-                post += u'~ '
+                post = u''.join([post,
+                    the_pitches,
+                    _duration_to_lily(durational_component, self._known_tuplet),
+                    u'~ '])
             post = post[:-2]
         else:
             # Just a straightforward duration
-            post = the_pitches + _duration_to_lily(self._as_m21.duration, self._known_tuplet)
+            post = u''.join([the_pitches,
+                _duration_to_lily(self._as_m21.duration, self._known_tuplet)])
 
         # Add a tie if necessary
         if self._as_m21.tie is not None:
             if u'start' == self._as_m21.tie.type:
-                post += u'~'
+                post = u''.join([post, u'~'])
 
         # Add the \markup{} block, if there is one
         if hasattr(self._as_m21, 'lily_markup'):
-            post += unicode(self._as_m21.lily_markup)
+            post = u''.join([post, unicode(self._as_m21.lily_markup)])
 
         # Done
         self._as_ly = post
@@ -630,6 +636,25 @@ class MeasureMaker(LilyPondObjectMaker):
     and chords and other things in the measure.
     """
 
+    def __init__(self, m21_obj, first_or_last=False):
+        """
+        Create a new MeasureMaker instance. For some objects, this will also generate the
+        LilyPond string corresponding to the objects stored in this LilyPondObjectMaker.
+
+        Parameters
+        ----------
+
+        m21_obj : music21.*
+            A music21 object
+
+        first_or_last : boolean
+            Whether this measure is either the first or the last; this triggers the call to see
+            whether the measure is incomplete. Better to check this only on the first and last
+            measures, since it takes a very long time. Default is False.
+        """
+        super(MeasureMaker, self).__init__(m21_obj)
+        self._check_for_incomplete = first_or_last
+
     def _calculate_lily(self):
         """
         Returns a str that is one line of a LilyPond score, containing one Measure.
@@ -637,7 +662,7 @@ class MeasureMaker(LilyPondObjectMaker):
         Input should be a Measure.
         """
 
-        post = u"\t"
+        post = [u"\t"]
         barcheck_included = False
 
         # Hold whether this Measure is supposed to be "invisible"
@@ -647,24 +672,25 @@ class MeasureMaker(LilyPondObjectMaker):
 
         # Add the first requirement of invisibility
         if invisible:
-            post += u'\stopStaff\n\t'
+            post.append(u'\stopStaff\n\t')
 
         # first check if it's a partial (pick-up) measure
-        bar_dur = self._as_m21.barDuration.quarterLength
-        my_dur = self._as_m21.duration.quarterLength
-        if round(my_dur, 2) < bar_dur:
-            if self._as_m21.duration.components is not None:
-                rounded = duration.Duration(round(my_dur, 2))
-                post += u"\\partial " + _duration_to_lily(rounded) + u"\n\t"
-            else:
-                post += u"\\partial " + _duration_to_lily(self._as_m21.duration) + u"\n\t"
+        if self._check_for_incomplete:
+            bar_dur = self._as_m21.barDuration.quarterLength
+            my_dur = self._as_m21.duration.quarterLength
+            if round(my_dur, 2) < bar_dur:
+                if self._as_m21.duration.components is not None:
+                    rounded = duration.Duration(round(my_dur, 2))
+                    post.extend([u"\\partial ", _duration_to_lily(rounded), u"\n\t"])
+                else:
+                    post.extend([u"\\partial ", _duration_to_lily(self._as_m21.duration), u"\n\t"])
 
         # Make self._as_m21 an iterable, so we can pull in multiple elements when we need to deal
         # with tuplets.
         bar_iter = iter(self._as_m21)
         # This holds \markup{} blocks that happened before a Note/Rest, and should be appended
         # to the next Note/Rest that happens.
-        attach_this_markup = ''
+        attach_this_markup = u''
         # And fill in all the stuff
         for obj in bar_iter:
             # Note or Rest
@@ -677,62 +703,64 @@ class MeasureMaker(LilyPondObjectMaker):
                 if isinstance(obj, note.Rest) and \
                 bar_iter.srcStream.barDuration.quarterLength == obj.quarterLength:
                     if invisible:
-                        post += u's' + _duration_to_lily(obj.duration) + u' '
+                        post.extend(['s', _duration_to_lily(obj.duration), u' '])
                     else:
-                        post += u'R' + _duration_to_lily(obj.duration) + u' '
+                        post.extend([u'R', _duration_to_lily(obj.duration), u' '])
                 # Is it the start of a tuplet?
                 elif obj.duration.tuplets is not None and len(obj.duration.tuplets) > 0:
                     number_of_tuplet_components = obj.duration.tuplets[0].numberNotesActual
                     in_the_space_of = obj.duration.tuplets[0].numberNotesNormal
-                    post += u'\\times ' + unicode(in_the_space_of) + u'/' + \
-                        unicode(number_of_tuplet_components) + u' { ' + \
-                        NoteMaker(obj, True).get_lilypond() + u" "
+                    post.extend([u'\\times ', unicode(in_the_space_of), u'/',
+                        unicode(number_of_tuplet_components), u' { ',
+                        NoteMaker(obj, True).get_lilypond(), u" "])
                     # For every tuplet component...
                     for _ in repeat(None, number_of_tuplet_components - 1):
-                        post += NoteMaker(next(bar_iter), True).get_lilypond() + u' '
-                    post += u'} '
+                        post.extend([NoteMaker(next(bar_iter), True).get_lilypond(), u' '])
+                    post.append(u'} ')
                 # It's just a regular note or rest
                 else:
-                    post += NoteMaker(obj).get_lilypond() + u' '
+                    post.extend([NoteMaker(obj).get_lilypond(), u' '])
 
                 # Is there a \markup{} block to append?
                 if attach_this_markup != '':
-                    post += attach_this_markup
+                    post.append(attach_this_markup)
                     attach_this_markup = ''
             # Chord
             elif isinstance(obj, chord.Chord):
-                post += ChordMaker(obj).get_lilypond() + u' '
+                post.extend([ChordMaker(obj).get_lilypond(), u' '])
             # Clef
             elif isinstance(obj, clef.Clef):
-                post += _clef_to_lily(obj, append=u'\n\t', invisible=invisible)
+                post.extend([_clef_to_lily(obj, append=u'\n\t', invisible=invisible)])
             # Time Signature
             elif isinstance(obj, meter.TimeSignature):
                 if invisible:
-                    post += u"\\once \\override Staff.TimeSignature #'transparent = ##t\n\t"
-
-                post += u"\\time " + unicode(obj.beatCount) + "/" + \
-                    unicode(obj.denominator) + u"\n\t"
+                    post.append(u"\\once \\override Staff.TimeSignature #'transparent = ##t\n\t")
+                post.extend([u"\\time ",
+                    unicode(obj.beatCount), "/",
+                    unicode(obj.denominator), u"\n\t"])
             # Key Signature
             elif isinstance(obj, key.KeySignature):
                 pitch_and_mode = obj.pitchAndMode
                 if invisible:
-                    post += u"\\once \\override Staff.KeySignature #'transparent = ##t\n\t"
-
+                    post.append(u"\\once \\override Staff.KeySignature #'transparent = ##t\n\t")
                 if 2 == len(pitch_and_mode) and pitch_and_mode[1] is not None:
-                    post += u"\\key " + _pitch_to_lily(pitch_and_mode[0], include_octave=False) + \
-                        u" \\" + pitch_and_mode[1] + "\n\t"
+                    post.extend([u"\\key ",
+                        _pitch_to_lily(pitch_and_mode[0], include_octave=False),
+                        u" \\" + pitch_and_mode[1] + "\n\t"])
                 else:
                     # We'll have to assume it's \major, because music21 does that.
-                    post += u"\\key " + _pitch_to_lily(pitch_and_mode[0], include_octave=False) + \
-                        u" \\major\n\t"
+                    post.extend([u"\\key ",
+                         _pitch_to_lily(pitch_and_mode[0], include_octave=False),
+                        u" \\major\n\t"])
             # Barline
             elif isinstance(obj, bar.Barline):
                 # We don't need to write down a regular barline, but either way, we definitely
                 # should include a bar-check symbol
-                post += u'|\n'
                 barcheck_included = True
                 if 'regular' != obj.style:
-                    post += u'\t' + _barline_to_lily(obj) + u'\n'
+                    post.extend([u'|\n', u'\t', _barline_to_lily(obj), u'\n'])
+                else:
+                    post.append(u'|\n')
             # PageLayout and SystemLayout
             elif isinstance(obj, layout.SystemLayout) or isinstance(obj, layout.PageLayout):
                 # I don't know what to do with these undocumented features.
@@ -752,26 +780,26 @@ class MeasureMaker(LilyPondObjectMaker):
             elif isinstance(obj, expressions.TextExpression):
                 the_marker = None  # store the local thing
                 if obj.positionVertical > 0:  # above staff
-                    the_marker = u"^\\markup{ "
+                    the_marker = [u"^\\markup{ "]
                 elif obj.positionVertical < 0:  # below staff
-                    the_marker = u"_\\markup{ "
+                    the_marker = [u"_\\markup{ "]
                 else:  # LilyPond can decide above or below
-                    the_marker = u"-\\markup{ "
+                    the_marker = [u"-\\markup{ "]
                 if obj.enclosure is not None:  # put a shape around the text?
                     pass  # TODO
-                the_marker += u'"' + obj.content + u'" }'
+                the_marker.extend([u'"', obj.content, u'" }'])
                 if obj.enclosure is not None:  # must close the enclosure, if necessary
-                    the_marker += u'}'
-                the_marker += u' '
+                    the_marker.append(u'}')
+                the_marker.append(u' ')
 
                 # Find out whether there's a previous Note or Rest to attach to
                 previous_element = self._as_m21.getElementBeforeOffset(obj.offset)
                 if not isinstance(previous_element, note.Note) and \
                 not isinstance(previous_element, note.Rest):
                     # this variable holds text to append to the next Note/Rest
-                    attach_this_markup += the_marker
+                    attach_this_markup = u''.join([attach_this_markup, the_marker])
                 else:  # There was a previous Note/Rest, so we're good
-                    post += the_marker
+                    post.append(u''.join(the_marker))
                 del the_marker
             # TODO: music21.layout.StaffLayout (Lassus duos)
             # We don't know what it is, and should probably figure out!
@@ -784,17 +812,17 @@ class MeasureMaker(LilyPondObjectMaker):
 
         # Append a bar-check symbol, if relevant
         if len(post) > 1 and not barcheck_included:
-            post += u"|\n"
+            post.append(u"|\n")
 
         # Append a note if we couldn't include a \markup{} block
         if attach_this_markup != '':
-            post += u'# Could not include this markup: ' + attach_this_markup
+            post.extend(u'# Could not include this markup: ', attach_this_markup)
 
         # The final requirement of invisibility
         if invisible:
-            post += u'\t\\startStaff\n'
+            post.append(u'\t\\startStaff\n')
 
-        self._as_ly = post
+        self._as_ly = u''.join(post)
 
 
 class AnalysisVoiceMaker(LilyPondObjectMaker):
@@ -822,24 +850,24 @@ class AnalysisVoiceMaker(LilyPondObjectMaker):
 
             if len(lily_this.duration.components) > 1:
                 for durational_component in lily_this.duration.components:
-                    post += _duration_to_lily(durational_component) + '~ '
+                    post = u''.join([post, _duration_to_lily(durational_component), '~ '])
                     post = post[:-2]
             else:
-                post += _duration_to_lily(lily_this.duration)
+                post = u''.join([post, _duration_to_lily(lily_this.duration)])
 
             if lily_this.tie is not None:
                 if lily_this.tie.type is 'start':
-                    post += u'~'
+                    post = u''.join([post, u'~'])
 
             if hasattr(lily_this, 'lily_markup'):
-                post += unicode(lily_this.lily_markup)
+                post = u''.join([post, unicode(lily_this.lily_markup)])
 
             return post
 
         # Just try to fill in all the stuff
         post = ''
         for obj in self._as_m21:
-            post += u'\t' + space_for_lily(obj) + u'\n'
+            post = u''.join([post, u'\t', space_for_lily(obj), u'\n'])
         self._as_ly = post
 
 
@@ -877,29 +905,29 @@ class PartMaker(LilyPondObjectMaker):
 
         # If this part has the "lily_instruction" property set, this goes here
         if hasattr(self._as_m21, 'lily_instruction'):
-            post += self._as_m21.lily_instruction
+            post = u''.join([post, self._as_m21.lily_instruction])
 
         # If the part has a .bestName property set, we'll use it to generate
         # both the .instrumentName and .shortInstrumentName for LilyPond.
         instr_name = self._as_m21.getInstrument().partName
         if instr_name is not None and len(instr_name) > 0:
-            post += u'\t%% ' + instr_name + u'\n'
-            post += u'\t\set Staff.instrumentName = \markup{ "' + instr_name + u'" }\n'
             if len(instr_name) > 3:
-                post += u'\t\set Staff.shortInstrumentName = \markup{ "' + \
-                    instr_name[:3] + u'." }\n'
+                post = u''.join([post, u'\t%% ', instr_name, u'\n',
+                    u'\t\set Staff.instrumentName = \markup{ "', instr_name, u'" }\n',
+                    u'\t\set Staff.shortInstrumentName = \markup{ "', instr_name[:3], u'." }\n'])
             else:
-                post += u'\t\set Staff.shortInstrumentName = \markup{ "' + instr_name + u'" }\n'
+                post = u''.join([post, u'\t%% ', instr_name, u'\n',
+                    u'\t\set Staff.instrumentName = \markup{ "', instr_name, u'" }\n',
+                    u'\t\set Staff.shortInstrumentName = \markup{ "', instr_name, u'" }\n'])
         elif hasattr(self._as_m21, 'lily_analysis_voice') and \
         True == self._as_m21.lily_analysis_voice:
             self._setts._analysis_notation_parts.append(call_this_part)
-            post += u'\t%% vis annotated analysis\n'
-            post += AnalysisVoiceMaker(self._as_m21).get_lilypond()
+            post = u''.join([post, u'\t%% vis annotated analysis\n',
+                AnalysisVoiceMaker(self._as_m21).get_lilypond()])
         # Custom settings for bar numbers
         if self._setts.get_property('bar numbers') is not None:
-            post += u"\n\t\override Score.BarNumber #'break-visibility = " + \
-                    self._setts.get_property('bar numbers') + u'\n'
-        #----
+            post = u''.join([post, u"\n\t\override Score.BarNumber #'break-visibility = ",
+                self._setts.get_property('bar numbers'), u'\n'])
 
         # If it's an analysis-annotation part, we'll handle this differently.
         if hasattr(self._as_m21, 'lily_analysis_voice') and \
@@ -913,7 +941,10 @@ class PartMaker(LilyPondObjectMaker):
             for thing in self._as_m21:
                 # Probably measures.
                 if isinstance(thing, stream.Measure):
-                    post += MeasureMaker(thing).get_lilypond()
+                    if 0 == thing.number:
+                        post = u''.join([post, MeasureMaker(thing, True).get_lilypond()])
+                    else:
+                        post = u''.join([post, MeasureMaker(thing).get_lilypond()])
                 elif isinstance(thing, instrument.Instrument):
                     # We can safely ignore this (for now?) because we already dealt
                     # with the part name earlier.
@@ -924,7 +955,7 @@ class PartMaker(LilyPondObjectMaker):
                 elif isinstance(thing, meter.TimeSignature):
                     pass
                 elif isinstance(thing, note.Note) or isinstance(thing, note.Rest):
-                    post += NoteMaker(thing).get_lilypond() + ' '
+                    post = u''.join([post, NoteMaker(thing).get_lilypond(), ' '])
                 # **kern importer garbage... well, it's only garbage to us
                 elif isinstance(thing, humdrum.spineParser.MiscTandem):
                     # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
@@ -936,7 +967,7 @@ class PartMaker(LilyPondObjectMaker):
                     print(msg)  # DEBUG
                     #raise UnidentifiedObjectError(msg + unicode(thing))
         # finally, to close the part
-        post += u"}\n"
+        post = u''.join([post, u"}\n"])
 
         # NOTE: you must re-implement this in subclasses
         self._as_ly = post
@@ -975,34 +1006,38 @@ class MetadataMaker(LilyPondObjectMaker):
             # NOTE: this commented line is what I used to have... unsure whether
             # I need it
             #post += '\tcomposer = \markup{ "' + self._as_m21.composer.name + '" }\n'
-            post += u'\tcomposer = \markup{ "' + self._as_m21.composer + u'" }\n'
+            post = u''.join([post, u'\tcomposer = \markup{ "', self._as_m21.composer, u'" }\n'])
         if self._as_m21.composers is not None:
             # I don't really know what to do with non-composer contributors
             pass
         if 'None' != self._as_m21.date:
-            post += u'\tdate = "' + unicode(self._as_m21.date) + u'"\n'
+            post = u''.join([post, u'\tdate = "', unicode(self._as_m21.date), u'"\n'])
         if self._as_m21.movementName is not None:
-            post += u'\tsubtitle = \markup{ "'
             if None != self._as_m21.movementNumber:
-                post += unicode(self._as_m21.movementNumber) + u': '
-            post += self._as_m21.movementName + u'" }\n'
+                post = u''.join([post, u'\tsubtitle = \markup{ "',
+                    unicode(self._as_m21.movementNumber), u': ',
+                    self._as_m21.movementName, u'" }\n'])
+            else:
+                post = u''.join([post, u'\tsubtitle = \markup{ "',
+                    self._as_m21.movementName, u'" }\n'])
         if self._as_m21.opusNumber is not None:
-            post += u'\topus = "' + unicode(self._as_m21.opusNumber) + u'"\n'
+            post = u''.join([post, u'\topus = "', unicode(self._as_m21.opusNumber), u'"\n'])
         if self._as_m21.title is not None:
-            post += u'\ttitle = \markup{ \"' + self._as_m21.title
             if self._as_m21.alternativeTitle is not None:
-                post += u'(\\"' + self._as_m21.alternativeTitle + u'\\")'
-            post += u'" }\n'
+                post = u''.join([post, u'\ttitle = \markup{ \"', self._as_m21.title,
+                    u'(\\"' + self._as_m21.alternativeTitle + u'\\")', u'" }\n'])
+            else:
+                post = u''.join([post, u'\ttitle = \markup{ \"', self._as_m21.title, u'" }\n'])
         # Extra Formatting Options
         # Tagline
         if self._setts.get_property('tagline') is None:
-            post += u'\ttagline = ""\n'
+            post = u''.join([post, u'\ttagline = ""\n'])
         elif self._setts.get_property('tagline') == '':
             pass
         else:
-            post += u'\ttagline = "' + self._setts.get_property('tagline') + '"\n'
+            post = u''.join([post, u'\ttagline = "', self._setts.get_property('tagline'), '"\n'])
         # close the \header{} block
-        post += u"}\n"
+        post = u''.join([post, u"}\n"])
 
         self._as_ly = post
 
@@ -1033,14 +1068,12 @@ class ScoreMaker(LilyPondObjectMaker):
         LilyPondObjectMaker.
         """
 
-        # Things Before Parts
-        # Our mark!
-        post = u'% LilyPond output from music21 via "OutputLilyPond"\n'
-        # Version
-        post += u'\\version "' + self._setts.get_property('lilypond_version') + u'"\n\n'
-        # Set paper size
-        post += u'\\paper {\n\t#(set-paper-size "' + self._setts.get_property('paper_size') + \
-            u'")\n}\n\n'
+        # Things Before Parts:
+        # Our mark! // Version // Paper size
+        post = [u'% LilyPond output from music21 via "OutputLilyPond"\n',
+            u'\\version "', self._setts.get_property('lilypond_version'), u'"\n\n',
+            u'\\paper {\n\t#(set-paper-size "', self._setts.get_property('paper_size'),
+            u'")\n}\n\n']
 
         # Parts
         # This can hold all of our parts... they might also be a StaffGroup,
@@ -1052,29 +1085,28 @@ class ScoreMaker(LilyPondObjectMaker):
             # If _process_stream() can't deal with the object type, it returns None
             if the_part_ly is not None:
                 list_of_parts.append(the_part_ly + u"\n")
-            #else:
-                #print('--> "None" from _process_stream() for ' + str(possible_part))  # DEBUG
         # Append the parts to the score we're building. In the future, it'll
         # be important to re-arrange the parts if necessary, or maybe to filter
         # things, so we'll keep everything in this supposedly efficient loop.
         for i in xrange(len(list_of_parts)):
-            post += list_of_parts[i]
+            post.append(list_of_parts[i])
 
         # Things After Parts
         # Output the \score{} block
-        post += u'\\score {\n\t\\new StaffGroup\n\t<<\n'
+        post.append(u'\\score {\n\t\\new StaffGroup\n\t<<\n')
         for each_part in self._setts._parts_in_this_score:
             if each_part in self._setts._analysis_notation_parts:
-                post += u'\t\t\\new VisAnnotation = "' + each_part + u'" \\' + each_part + u'\n'
+                post.extend([u'\t\t\\new VisAnnotation = "', each_part,
+                    u'" \\' + each_part + u'\n'])
             else:
-                post += u'\t\t\\new Staff = "' + each_part + u'" \\' + each_part + u'\n'
-        post += u'\t>>\n'
+                post.extend([u'\t\t\\new Staff = "', each_part, u'" \\' + each_part + u'\n'])
+        post.append(u'\t>>\n')
 
         # Output the \layout{} block
-        post += u'\t\\layout{\n'
+        post.append(u'\t\\layout{\n')
         if self._setts.get_property('indent') is not None:
-            post += u'\t\tindent = ' + self._setts.get_property('indent') + u'\n'
-        post += u"""\t\t% VisAnnotation Context
+            post.extend([u'\t\tindent = ', self._setts.get_property('indent'), u'\n'])
+        post.append("""\t\t% VisAnnotation Context
 \t\t\context
 \t\t{
 \t\t\t\\type "Engraver_group"
@@ -1094,7 +1126,7 @@ class ScoreMaker(LilyPondObjectMaker):
 \t\t\t\StaffGroup
 \t\t\t\\accepts VisAnnotation
 \t\t}
-"""
-        post += u'\t}\n}\n'
+\t}\n}\n
+""")
 
-        self._as_ly = post
+        self._as_ly = u''.join(post)

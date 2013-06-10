@@ -61,13 +61,13 @@ class TestMeasureMaker(unittest.TestCase):
 \t\\time 4/4
 \t\\times 2/3 { c'16 d'16 e'16 } |
 """
-        actual = MeasureMaker(test_in1)
+        actual = MeasureMaker(test_in1, True)
         self.assertEqual(actual.get_lilypond(), expect)
 
     def test_bwv77_bass_part_1(self):
         bass_part = converter.parse('test_corpus/bwv77.mxl').parts[3]
         # first measure
-        actual = MeasureMaker(bass_part[1])
+        actual = MeasureMaker(bass_part[1], True)
         expect = u'\t\partial 4\n\t\clef bass\n\t\key b \minor\n\t\\time 4/4\n\te4 |\n'
         # tests
         self.assertEqual(actual.get_lilypond(), expect)
@@ -82,7 +82,7 @@ class TestMeasureMaker(unittest.TestCase):
     def test_bwv77_bass_part_3(self):
         bass_part = converter.parse('test_corpus/bwv77.mxl').parts[3]
         # final measure
-        actual = MeasureMaker(bass_part[-1])
+        actual = MeasureMaker(bass_part[-1], True)
         expect = u'\t\\partial 2.\n\tg8 e8 fis4 b,4 |\n\t\\bar "|."\n'
         self.assertEqual(actual.get_lilypond(), expect)
 
