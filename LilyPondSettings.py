@@ -26,7 +26,7 @@ module.
 """
 
 # Python
-from subprocess import Popen, PIPE  # for running bash things
+from subprocess import Popen, PIPE  # for running LilyPond on Linux
 from platform import system as which_os
 
 
@@ -118,12 +118,16 @@ class LilyPondSettings:
             # computers, but likely without enabling LilyPond supprt
             return ('lilypond.exe', '2.0.0')
         else:
-            # On Linux/OS X/Unix systems, we'll assume a "bash" shell and hope it goes
-            proc = Popen(['which', 'lilypond'], stdout=PIPE)
-            lily_path = proc.stdout.read()[:-1]  # remove terminating newline
-            proc = Popen([lily_path, '--version'], stdout=PIPE)
-            version = proc.stdout.read()
-            lily_verzh = version[version.find('LilyPond') + 9: version.find('\n')]
+            # On Linux/Unix systems, we'll assume a "bash"-like shell, and brace for impact if it's
+            # OS X, which will complain
+            try:
+                proc = Popen(['which', 'lilypond'], stdout=PIPE)
+                lily_path = proc.stdout.read()[:-1]  # remove terminating newline
+                proc = Popen([lily_path, '--version'], stdout=PIPE)
+                version = proc.stdout.read()
+                lily_verzh = version[version.find('LilyPond') + 9: version.find('\n')]
+            except OSError:
+                return ('lilypond', '2.16.0')  # TODO: what a terrible hack
 
             return (lily_path, lily_verzh)
 
