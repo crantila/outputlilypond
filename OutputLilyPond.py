@@ -30,15 +30,14 @@ with music research software.
 
 ## Imports
 # python standard library
-from subprocess import Popen, PIPE  # for running bash things
+import os  # for running LilyPond on OS X
+from subprocess import Popen, PIPE  # for running LilyPond on Linux
 import random
 from itertools import repeat
 # music21
 from music21 import clef, meter, key, stream, metadata, layout, bar, humdrum, tempo, note, \
     instrument, expressions, chord, duration, text
-#from music21.duration import Duration
 # output_LilyPond
-#from FileOutput import file_outputter
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
 from LilyPondSettings import LilyPondSettings
 
@@ -448,9 +447,15 @@ def _run_lilypond(filename, the_settings):
         pdf_filename = filename
 
     # NB: this method returns something that might be interesting
-    Popen([the_settings.get_property('lilypond_path'), '--pdf', '-o', pdf_filename, filename],
-        stdout=PIPE,
-        stderr=PIPE)
+    # NB2: this try/except block means, practically, that we'll use Popen (which is better) on
+    # Linux, but where it fails (OS X), we'll use os.system()
+    try:
+        Popen([the_settings.get_property('lilypond_path'), '--pdf', '-o', pdf_filename, filename],
+            stdout=PIPE,
+            stderr=PIPE)
+    except OSError:
+        os.system(the_settings.get_property('lilypond_path') + ' --pdf' + ' -o ' +
+            pdf_filename + ' ' + filename)
 
 
 def process_score(the_score, the_settings=None):
