@@ -34,9 +34,10 @@ import os  # for running LilyPond on OS X
 from subprocess import Popen, PIPE  # for running LilyPond on Linux
 import random
 from itertools import repeat
+from multiprocessing import Pool
 # music21
 from music21 import clef, meter, key, stream, metadata, layout, bar, humdrum, tempo, note, \
-    instrument, expressions, chord, duration, text
+    instrument, expressions, chord, duration, text, converter
 # output_LilyPond
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
 from LilyPondSettings import LilyPondSettings
@@ -357,7 +358,7 @@ def _pitch_to_lily(start_p, include_octave=True):
     return post
 
 
-def _process_stream(the_stream, the_settings):
+def _process_stream(the_stream, the_settings, the_index=None):
     """
     Create a string that contains all the LilyPond syntax for the object.
 
@@ -365,6 +366,7 @@ def _process_stream(the_stream, the_settings):
     ----------
 
     the_stream : music21.stream.Part
+        If the_stream is a Part, and the_index is not None, a 3-tuple will be returned.
     the_stream : music21.stream.Score
     the_stream : music21.metadata.Metadata
     the_stream : music21.layout.StaffGroup
@@ -379,11 +381,21 @@ def _process_stream(the_stream, the_settings):
     the_settings : LilyPondSettings
         ????
 
+    the_index : int or None
+        If this value is not None, it is used in the retrn value. This is for use in
+        multiprocessing.
+
     Returns
     -------
 
-    a string
-        The LilyPond syntax for the given music21 object.
+    a string, a 2-tuple, or a 3-tuple
+        Either:
+            The LilyPond syntax for the given music21 object.
+        Or:
+            The value of "index" and the LilyPond syntax for the given music21 object.
+        Or:
+            The value of "index," its LilyPond syntax, and the 8-character string used for the
+            part name.
 
     Raises
     ------
@@ -391,39 +403,53 @@ def _process_stream(the_stream, the_settings):
     UnidentifiedObjectError
         When the object is of a type not supported by this function.
     """
+    if isinstance(the_stream, str):
+        the_stream = converter.thawStr(the_stream)
+
     obj_type = type(the_stream)
+    post = None
+    part_name = None
 
     if obj_type == stream.Score:
-        return ScoreMaker(the_stream, the_settings).get_lilypond()
+        post = ScoreMaker(the_stream, the_settings).get_lilypond()
     elif obj_type == stream.Part:
-        return PartMaker(the_stream, the_settings).get_lilypond()
+        post = PartMaker(the_stream, the_settings).get_lilypond()
+        part_name = post[:8]
     elif obj_type == metadata.Metadata:
-        return MetadataMaker(the_stream, the_settings).get_lilypond()
+        post = MetadataMaker(the_stream, the_settings).get_lilypond()
     elif obj_type == layout.StaffGroup:
         # TODO: Figure out how to use this by reading documentation
-        return u''
+        post = u''
     elif obj_type == humdrum.spineParser.MiscTandem:
         # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
         # Is there really nothing we can use this for? Seems like these exist only to help
         # the music21 developers.
-        return u''
+        post = u''
     elif obj_type == humdrum.spineParser.GlobalReference:
         # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
         # These objects have lots of metadata, so they'd be pretty useful!
-        return u''
+        post = u''
     elif obj_type == humdrum.spineParser.GlobalComment:
         # http://mit.edu/music21/doc/html/moduleHumdrumSpineParser.html
         # These objects have lots of metadata, so they'd be pretty useful!
-        return u''
+        post = u''
     elif obj_type == layout.ScoreLayout:  # TODO: this (as in Lassus duos)
-        return u''
+        post = u''
     elif obj_type == text.TextBox:  # TODO: this (as in Lassus duos)
-        return u''
+        post = u''
     else:
         # Anything else, we don't know what it is!
         msg = u'Unknown object in Stream: ' + unicode(the_stream)
         print(msg)  # DEBUG
+        post = u''  # DEBUG
         #raise UnidentifiedObjectError(msg)
+
+    if the_index is not None and obj_type == stream.Part:
+        return (the_index, post, part_name)
+    elif the_index is not None:
+        return (the_index, post)
+    else:
+        return post
 
 
 def run_lilypond(filename):
@@ -479,7 +505,13 @@ def process_score(the_score, the_settings=None):
         This is the LilyPond source file.
     """
     the_settings = LilyPondSettings() if the_settings is None else the_settings
-    return _process_stream(the_score, the_settings)
+    if isinstance(the_score, stream.Score):
+        # multiprocessing!
+        print('multi!')  # DEBUG
+        return LilyMultiprocessor(the_score, the_settings).run()
+    else:
+        # not sure what to do here... guess we'll default to old style?
+        return _process_stream(the_score, the_settings)
 
 
 class NoteMaker(LilyPondObjectMaker):
@@ -806,7 +838,9 @@ class MeasureMaker(LilyPondObjectMaker):
                 else:  # There was a previous Note/Rest, so we're good
                     post.append(u''.join(the_marker))
                 del the_marker
-            # TODO: music21.layout.StaffLayout (Lassus duos)
+            elif isinstance(obj, layout.StaffLayout):  # as in the Lassus duos
+                # TODO: something more useful
+                pass
             # We don't know what it is, and should probably figure out!
             else:
                 msg = 'Unknown object in Measure ' + unicode(self._as_m21.number) + ': ' + \
@@ -892,6 +926,11 @@ class PartMaker(LilyPondObjectMaker):
         ----------
 
         setts : ???
+
+        index : int or None
+            If this Part should have an index associated with it, for use when multiprocessing,
+            for example, then supply it here, and it will be returned by get_lilypond(). Default
+            is None.
         """
         super(PartMaker, self).__init__(m21_obj)
         self._setts = setts
@@ -1135,3 +1174,115 @@ class ScoreMaker(LilyPondObjectMaker):
 """)
 
         self._as_ly = u''.join(post)
+
+
+class LilyMultiprocessor(object):
+    "Manage multiprocessing for OutputLilyPond."
+
+    def __init__(self, score, setts):
+        """
+        Create a new LilyMultiprocessor instance.
+        """
+        super(LilyMultiprocessor, self).__init__()
+        self._score = score
+        self._setts = setts
+        self._pool = Pool()
+        self._finished_parts = []
+        self._final_result = None
+
+    def callback(self, result):
+        """
+        For internal use.
+
+        Called when _process_stream has finished converting an object to its LilyPond
+        representation.The method adds the resulting string to the internal list of analyses.
+        """
+        # we have to put things in their proper indices!
+        print('callback holla')  # DEBUG
+        self._finished_parts[result[0]] = result[1]
+        self._setts._parts_in_this_score[result[0]] = result[2]
+        print('putting in ' + str(result[2]))  # DEBUG
+
+    def run(self):
+        """
+        Process all the parts! Prepare a score!
+        """
+
+        # Things Before Parts:
+        # Our mark! // Version // Paper size
+        post = [u'% LilyPond output from music21 via "OutputLilyPond"\n',
+            u'\\version "', self._setts.get_property('lilypond_version'), u'"\n\n',
+            u'\\paper {\n\t#(set-paper-size "', self._setts.get_property('paper_size'),
+            u'")\n}\n\n']
+
+        # Parts:
+        # Initialize the length of finished "parts" (maybe they're other things, too, like Metadata
+        # or whatever... doesn't really matter).
+        self._finished_parts = [None for i in xrange(len(self._score))]
+        self._setts._parts_in_this_score = [None for i in xrange(len(self._score))]
+
+        # Go through the possible parts and see what we find.
+        for i in xrange(len(self._score)):
+            if isinstance(self._score[i], stream.Part):
+                self._pool.apply_async(_process_stream,
+                    (converter.freezeStr(self._score[i]), self._setts, i),
+                    callback=self.callback)
+            else:
+                self._finished_parts[i] = _process_stream(self._score[i], self._setts)
+
+        # Wait for the multiprocessing to finish
+        self._pool.close()
+        self._pool.join()
+        self._pool = None
+
+        # Append the parts to the score we're building. In the future, it'll be important to
+        # re-arrange the parts if necessary, or maybe to filter things, so we'll keep everything
+        # in this supposedly efficient loop.
+        for i in xrange(len(self._finished_parts)):
+            if self._finished_parts[i] != u'' and self._finished_parts[i] is not None:
+                post.append(self._finished_parts[i] + u'\n')
+
+        # Things After Parts
+        # Output the \score{} block
+        post.append(u'\\score {\n\t\\new StaffGroup\n\t<<\n')
+        for each_part in self._setts._parts_in_this_score:
+            if each_part is None:
+                continue
+            elif each_part in self._setts._analysis_notation_parts:
+                post.extend([u'\t\t\\new VisAnnotation = "', each_part,
+                    u'" \\' + each_part + u'\n'])
+            else:
+                post.extend([u'\t\t\\new Staff = "', each_part, u'" \\' + each_part + u'\n'])
+        post.append(u'\t>>\n')
+
+        # Output the \layout{} block
+        post.append(u'\t\\layout{\n')
+        if self._setts.get_property('indent') is not None:
+            post.extend([u'\t\tindent = ', self._setts.get_property('indent'), u'\n'])
+        post.append("""\t\t% VisAnnotation Context
+\t\t\context
+\t\t{
+\t\t\t\\type "Engraver_group"
+\t\t\t\\name VisAnnotation
+\t\t\t\\alias Voice
+\t\t\t\consists "Output_property_engraver"
+\t\t\t\consists "Script_engraver"
+\t\t\t\consists "Text_engraver"
+\t\t\t\consists "Skip_event_swallow_translator"
+\t\t\t\consists "Axis_group_engraver"
+\t\t}
+\t\t% End VisAnnotation Context
+\t\t
+\t\t% Modify "StaffGroup" context to accept VisAnnotation context.
+\t\t\context
+\t\t{
+\t\t\t\StaffGroup
+\t\t\t\\accepts VisAnnotation
+\t\t}
+\t}\n}\n
+""")
+
+        self._final_result = u''.join(post)
+
+        # Return the "finished score"
+        return self._final_result
