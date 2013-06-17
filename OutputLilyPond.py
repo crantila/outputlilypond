@@ -365,7 +365,7 @@ def _process_stream(the_stream, the_settings, the_index=None):
     Parameters
     ----------
 
-    the_stream : music21.stream.Part
+    the_stream : music21.stream.Part (or music21.stream.PartStaff)
         If the_stream is a Part, and the_index is not None, a 3-tuple will be returned.
     the_stream : music21.stream.Score
     the_stream : music21.metadata.Metadata
@@ -412,7 +412,7 @@ def _process_stream(the_stream, the_settings, the_index=None):
 
     if obj_type == stream.Score:
         post = ScoreMaker(the_stream, the_settings).get_lilypond()
-    elif obj_type == stream.Part:
+    elif obj_type == stream.Part or obj_type == stream.PartStaff:
         post = PartMaker(the_stream, the_settings).get_lilypond()
         part_name = post[:8]
     elif obj_type == metadata.Metadata:
@@ -444,7 +444,7 @@ def _process_stream(the_stream, the_settings, the_index=None):
         post = u''  # DEBUG
         #raise UnidentifiedObjectError(msg)
 
-    if the_index is not None and obj_type == stream.Part:
+    if the_index is not None and (obj_type == stream.Part or obj_type == stream.PartStaff):
         return (the_index, post, part_name)
     elif the_index is not None:
         return (the_index, post)
@@ -507,7 +507,6 @@ def process_score(the_score, the_settings=None):
     the_settings = LilyPondSettings() if the_settings is None else the_settings
     if isinstance(the_score, stream.Score):
         # multiprocessing!
-        print('multi!')  # DEBUG
         return LilyMultiprocessor(the_score, the_settings).run()
     else:
         # not sure what to do here... guess we'll default to old style?
@@ -1198,10 +1197,11 @@ class LilyMultiprocessor(object):
         representation.The method adds the resulting string to the internal list of analyses.
         """
         # we have to put things in their proper indices!
-        print('callback holla')  # DEBUG
         self._finished_parts[result[0]] = result[1]
         self._setts._parts_in_this_score[result[0]] = result[2]
-        print('putting in ' + str(result[2]))  # DEBUG
+        if hasattr(self._score[result[0]], u'lily_analysis_voice') and \
+        self._score[result[0]].lily_analysis_voice:
+            self._setts._analysis_notation_parts.append(result[2])
 
     def run(self):
         """
