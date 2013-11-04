@@ -38,7 +38,7 @@ from multiprocessing import Pool
 # music21
 from music21 import clef, meter, key, stream, metadata, layout, bar, humdrum, tempo, note, \
     instrument, expressions, chord, duration, text, converter
-# output_LilyPond
+# OutputLilyPond
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
 from LilyPondSettings import LilyPondSettings
 
@@ -1199,6 +1199,8 @@ class LilyMultiprocessor(object):
         # we have to put things in their proper indices!
         self._finished_parts[result[0]] = result[1]
         self._setts._parts_in_this_score[result[0]] = result[2]
+        if 0 == len(self._score):
+            print(u'OutputLilyPond: zero-length Score...')  # DEBUG
         if hasattr(self._score[result[0]], u'lily_analysis_voice') and \
         self._score[result[0]].lily_analysis_voice:
             self._setts._analysis_notation_parts.append(result[2])
@@ -1224,6 +1226,9 @@ class LilyMultiprocessor(object):
         # Go through the possible parts and see what we find.
         for i in xrange(len(self._score)):
             if isinstance(self._score[i], stream.Part):
+                if hasattr(self._score[i], u'lily_analysis_voice') and \
+                    self._score[i].lily_analysis_voice:
+                        self._setts._analysis_notation_parts.append(i)
                 self._pool.apply_async(_process_stream,
                     (converter.freezeStr(self._score[i]), self._setts, i),
                     callback=self.callback)
