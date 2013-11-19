@@ -21,11 +21,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 """
-The OutputLilyPond module converts music21 objects into a LilyPond notation
-file, then tries to run LilyPond to convert that into a PDF score.
+Output music21 objects into their respective LilyPond representation. This library is intended for
+music research software.
 
-OutputLilyPond is a python library that uses music21; it's intended for use
-with music research software.
+Use :mod:`OutputLilyPond` by calling :func:`process_score` then :func:`run_lilypond`. You may wish
+to use your own :class:`LilyPondSettings` object to change the way :mod:`OutputLilyPond` behaves.
+
+You may also use our module-level functions for other tasks, but we do not recommend you use
+:func:`process_score` along with other module-level functions.
 """
 
 ## Imports
@@ -41,6 +44,63 @@ from music21 import clef, meter, key, stream, metadata, layout, bar, humdrum, te
 # OutputLilyPond
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
 from LilyPondSettings import LilyPondSettings
+
+
+def run_lilypond(filename):
+    """
+    Given a filename, run lilypond on that file.
+    """
+    return _run_lilypond(filename, LilyPondSettings())
+
+
+def _run_lilypond(filename, the_settings):
+    """
+    Arguments should be a str that is the file name followed by a
+    LilyPondSettings object.
+    """
+    # Make the PDF filename: if "filename" ends with ".ly" then remove it so
+    # we don't output to ".ly.pdf"
+    pdf_filename = ''
+    if 3 < len(filename) and '.ly' == filename[-3:]:
+        pdf_filename = filename[:-3]
+    else:
+        pdf_filename = filename
+
+    # NB: this method returns something that might be interesting
+    # NB2: this try/except block means, practically, that we'll use Popen (which is better) on
+    # Linux, but where it fails (OS X), we'll use os.system()
+    try:
+        Popen([the_settings.get_property('lilypond_path'), '--pdf', '-o', pdf_filename, filename],
+            stdout=PIPE,
+            stderr=PIPE)
+    except OSError:
+        os.system(the_settings.get_property('lilypond_path') + ' --pdf' + ' -o ' +
+            pdf_filename + ' ' + filename)
+
+
+def process_score(the_score, the_settings=None):
+    """
+    Convert an entire :class:`music21.stream.Stream` object, nominally a :class:`Score`, into a
+    unicode string for output as a LilyPond source file.
+
+    :param the_score: The :class:`Stream` to output. This method works on any type of
+        :class:`Stream`, but uses multiprocessing only for :class:`Score` objects.
+    :type the_score: :class:`music21.stream.Stream`
+    :param the_settings: An optional settings object that will be passed to all client functions.
+        Use this object to modify runtime behaviour.
+    :type the_settings: :class:`LilyPondSettings`
+
+    :returns: A string that holds an entire LilyPond source file (as complete as possible for the
+        type of :class:`Stream` object provided).
+    :rtype: ``unicode``
+    """
+    the_settings = LilyPondSettings() if the_settings is None else the_settings
+    if isinstance(the_score, stream.Score):
+        # multiprocessing!
+        return LilyMultiprocessor(the_score, the_settings).run()
+    else:
+        # not sure what to do here... guess we'll default to old style?
+        return _process_stream(the_score, the_settings)
 
 
 class LilyPondObjectMaker(object):
@@ -450,67 +510,6 @@ def _process_stream(the_stream, the_settings, the_index=None):
         return (the_index, post)
     else:
         return post
-
-
-def run_lilypond(filename):
-    """
-    Given a filename, run lilypond on that file.
-    """
-    return _run_lilypond(filename, LilyPondSettings())
-
-
-def _run_lilypond(filename, the_settings):
-    """
-    Arguments should be a str that is the file name followed by a
-    LilyPondSettings object.
-    """
-    # Make the PDF filename: if "filename" ends with ".ly" then remove it so
-    # we don't output to ".ly.pdf"
-    pdf_filename = ''
-    if 3 < len(filename) and '.ly' == filename[-3:]:
-        pdf_filename = filename[:-3]
-    else:
-        pdf_filename = filename
-
-    # NB: this method returns something that might be interesting
-    # NB2: this try/except block means, practically, that we'll use Popen (which is better) on
-    # Linux, but where it fails (OS X), we'll use os.system()
-    try:
-        Popen([the_settings.get_property('lilypond_path'), '--pdf', '-o', pdf_filename, filename],
-            stdout=PIPE,
-            stderr=PIPE)
-    except OSError:
-        os.system(the_settings.get_property('lilypond_path') + ' --pdf' + ' -o ' +
-            pdf_filename + ' ' + filename)
-
-
-def process_score(the_score, the_settings=None):
-    """
-    Process an entire music21 Score object, turning it into a string that can be output as a
-    complete LilyPond source file.
-
-    Parameters
-    ----------
-
-    the_score : music21.stream.Score
-
-    the_settings : LilyPondSettings
-        Optional settings object. If none is provided, or if "None" is provided, a new instance
-        will be created with the default settings.
-
-    Returns
-    -------
-
-    string
-        This is the LilyPond source file.
-    """
-    the_settings = LilyPondSettings() if the_settings is None else the_settings
-    if isinstance(the_score, stream.Score):
-        # multiprocessing!
-        return LilyMultiprocessor(the_score, the_settings).run()
-    else:
-        # not sure what to do here... guess we'll default to old style?
-        return _process_stream(the_score, the_settings)
 
 
 class NoteMaker(LilyPondObjectMaker):
