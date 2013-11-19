@@ -1,6 +1,5 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 # -*- coding: utf-8 -*-
-
 #-------------------------------------------------------------------------------
 # Filename: OutputLilyPond.py
 # Purpose: Outputs music21 Objects into LilyPond Format
@@ -31,17 +30,13 @@ You may also use our module-level functions for other tasks, but we do not recom
 :func:`process_score` along with other module-level functions.
 """
 
-## Imports
-# python standard library
 import os  # for running LilyPond on OS X
 from subprocess import Popen, PIPE  # for running LilyPond on Linux
 import random
 from itertools import repeat
 from multiprocessing import Pool
-# music21
 from music21 import clef, meter, key, stream, metadata, layout, bar, humdrum, tempo, note, \
     instrument, expressions, chord, duration, text, converter
-# OutputLilyPond
 from LilyPondProblems import UnidentifiedObjectError, ImpossibleToProcessError
 from LilyPondSettings import LilyPondSettings
 
@@ -323,7 +318,7 @@ def _duration_to_lily(dur, known_tuplet=False):
     # We need both a list of our potential durations and a dictionary of what
     # they mean in LilyPond terms.
     list_of_durations = [16.0, 8.0, 4.0, 2.0, 1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125]
-    dictionary_of_durations = {16.0: u'\longa', 8.0: u'\\breve', 4.0: u'1', 2.0: u'2', 1.0: u'4',
+    dictionary_of_durations = {16.0: u'\\longa', 8.0: u'\\breve', 4.0: u'1', 2.0: u'2', 1.0: u'4',
         0.5: u'8', 0.25: u'16', 0.125: u'32', 0.0625: u'64', 0.3125: u'128'}
 
     # So we only access the quarterLength once
@@ -534,7 +529,7 @@ class NoteMaker(LilyPondObjectMaker):
             - lily_markup (string)
                 If this attribute exists, its contents will be passed through unicode() then
                 appended after (to the right of) the rest of the Note/Rest/object's code. The
-                intended purpose is use with the \markup{} command.
+                intended purpose is use with the ``\\markup{}`` command.
 
         known_tuplet : boolean
             Whether we know this Note is part of a tuplet. Default is False.
@@ -610,7 +605,7 @@ class ChordMaker(LilyPondObjectMaker):
             - lily_markup (string)
                 If this attribute exists, its contents will be passed through unicode() then
                 appended after (to the right of) the rest of the Note/Rest/object's code. The
-                intended purpose is use with the \markup{} command.
+                intended purpose is use with the ``\\markup{}`` command.
 
         known_tuplet : boolean
             Whether we know this Note is part of a tuplet. Default is False.
@@ -707,7 +702,7 @@ class MeasureMaker(LilyPondObjectMaker):
 
         # Add the first requirement of invisibility
         if invisible:
-            post.append(u'\stopStaff\n\t')
+            post.append(u'\\stopStaff\n\t')
 
         # first check if it's a partial (pick-up) measure
         if self._check_for_incomplete:
@@ -955,12 +950,12 @@ class PartMaker(LilyPondObjectMaker):
         if instr_name is not None and len(instr_name) > 0:
             if len(instr_name) > 3:
                 post = u''.join([post, u'\t%% ', instr_name, u'\n',
-                    u'\t\set Staff.instrumentName = \markup{ "', instr_name, u'" }\n',
-                    u'\t\set Staff.shortInstrumentName = \markup{ "', instr_name[:3], u'." }\n'])
+                    u'\t\\set Staff.instrumentName = \\markup{ "', instr_name, u'" }\n',
+                    u'\t\\set Staff.shortInstrumentName = \\markup{ "', instr_name[:3], u'." }\n'])
             else:
                 post = u''.join([post, u'\t%% ', instr_name, u'\n',
-                    u'\t\set Staff.instrumentName = \markup{ "', instr_name, u'" }\n',
-                    u'\t\set Staff.shortInstrumentName = \markup{ "', instr_name, u'" }\n'])
+                    u'\t\\set Staff.instrumentName = \\markup{ "', instr_name, u'" }\n',
+                    u'\t\\set Staff.shortInstrumentName = \\markup{ "', instr_name, u'" }\n'])
         elif hasattr(self._as_m21, 'lily_analysis_voice') and \
         True == self._as_m21.lily_analysis_voice:
             self._setts._analysis_notation_parts.append(call_this_part)
@@ -968,7 +963,7 @@ class PartMaker(LilyPondObjectMaker):
                 AnalysisVoiceMaker(self._as_m21).get_lilypond()])
         # Custom settings for bar numbers
         if self._setts.get_property('bar numbers') is not None:
-            post = u''.join([post, u"\n\t\override Score.BarNumber #'break-visibility = ",
+            post = u''.join([post, u"\n\t\\override Score.BarNumber #'break-visibility = ",
                 self._setts.get_property('bar numbers'), u'\n'])
 
         # If it's an analysis-annotation part, we'll handle this differently.
@@ -1018,7 +1013,7 @@ class PartMaker(LilyPondObjectMaker):
 class MetadataMaker(LilyPondObjectMaker):
     """
     Convert a music21.metadata.Metadata instance into its corresponding LilyPond markup, which is
-    the \header{} block of the resulting LilyPond file
+    the ``\\header{}`` block of the resulting LilyPond file
     """
 
     # Instance Data
@@ -1041,14 +1036,14 @@ class MetadataMaker(LilyPondObjectMaker):
         Generate the LilyPond string corresponding to the objects stored in this
         LilyPondObjectMaker.
         """
-        post = u"\header {\n"
+        post = u"\\header {\n"
 
         if self._as_m21.composer is not None:
             # TODO: test this
             # NOTE: this commented line is what I used to have... unsure whether
             # I need it
             #post += '\tcomposer = \markup{ "' + self._as_m21.composer.name + '" }\n'
-            post = u''.join([post, u'\tcomposer = \markup{ "', self._as_m21.composer, u'" }\n'])
+            post = u''.join([post, u'\tcomposer = \\markup{ "', self._as_m21.composer, u'" }\n'])
         if self._as_m21.composers is not None:
             # I don't really know what to do with non-composer contributors
             pass
@@ -1056,20 +1051,20 @@ class MetadataMaker(LilyPondObjectMaker):
             post = u''.join([post, u'\tdate = "', unicode(self._as_m21.date), u'"\n'])
         if self._as_m21.movementName is not None:
             if None != self._as_m21.movementNumber:
-                post = u''.join([post, u'\tsubtitle = \markup{ "',
+                post = u''.join([post, u'\tsubtitle = \\markup{ "',
                     unicode(self._as_m21.movementNumber), u': ',
                     self._as_m21.movementName, u'" }\n'])
             else:
-                post = u''.join([post, u'\tsubtitle = \markup{ "',
+                post = u''.join([post, u'\tsubtitle = \\markup{ "',
                     self._as_m21.movementName, u'" }\n'])
         if self._as_m21.opusNumber is not None:
             post = u''.join([post, u'\topus = "', unicode(self._as_m21.opusNumber), u'"\n'])
         if self._as_m21.title is not None:
             if self._as_m21.alternativeTitle is not None:
-                post = u''.join([post, u'\ttitle = \markup{ \"', self._as_m21.title,
+                post = u''.join([post, u'\ttitle = \\markup{ \"', self._as_m21.title,
                     u'(\\"' + self._as_m21.alternativeTitle + u'\\")', u'" }\n'])
             else:
-                post = u''.join([post, u'\ttitle = \markup{ \"', self._as_m21.title, u'" }\n'])
+                post = u''.join([post, u'\ttitle = \\markup{ \"', self._as_m21.title, u'" }\n'])
         # Extra Formatting Options
         # Tagline
         if self._setts.get_property('tagline') is None:
@@ -1127,6 +1122,7 @@ class ScoreMaker(LilyPondObjectMaker):
             # If _process_stream() can't deal with the object type, it returns None
             if the_part_ly is not None:
                 list_of_parts.append(the_part_ly + u"\n")
+
         # Append the parts to the score we're building. In the future, it'll
         # be important to re-arrange the parts if necessary, or maybe to filter
         # things, so we'll keep everything in this supposedly efficient loop.
@@ -1149,23 +1145,23 @@ class ScoreMaker(LilyPondObjectMaker):
         if self._setts.get_property('indent') is not None:
             post.extend([u'\t\tindent = ', self._setts.get_property('indent'), u'\n'])
         post.append("""\t\t% VisAnnotation Context
-\t\t\context
+\t\t\\context
 \t\t{
 \t\t\t\\type "Engraver_group"
 \t\t\t\\name VisAnnotation
 \t\t\t\\alias Voice
-\t\t\t\consists "Output_property_engraver"
-\t\t\t\consists "Script_engraver"
-\t\t\t\consists "Text_engraver"
-\t\t\t\consists "Skip_event_swallow_translator"
-\t\t\t\consists "Axis_group_engraver"
+\t\t\t\\consists "Output_property_engraver"
+\t\t\t\\consists "Script_engraver"
+\t\t\t\\consists "Text_engraver"
+\t\t\t\\consists "Skip_event_swallow_translator"
+\t\t\t\\consists "Axis_group_engraver"
 \t\t}
 \t\t% End VisAnnotation Context
 \t\t
 \t\t% Modify "StaffGroup" context to accept VisAnnotation context.
-\t\t\context
+\t\t\\context
 \t\t{
-\t\t\t\StaffGroup
+\t\t\t\\StaffGroup
 \t\t\t\\accepts VisAnnotation
 \t\t}
 \t}\n}\n
@@ -1264,23 +1260,23 @@ class LilyMultiprocessor(object):
         if self._setts.get_property('indent') is not None:
             post.extend([u'\t\tindent = ', self._setts.get_property('indent'), u'\n'])
         post.append("""\t\t% VisAnnotation Context
-\t\t\context
+\t\t\\context
 \t\t{
 \t\t\t\\type "Engraver_group"
 \t\t\t\\name VisAnnotation
 \t\t\t\\alias Voice
-\t\t\t\consists "Output_property_engraver"
-\t\t\t\consists "Script_engraver"
-\t\t\t\consists "Text_engraver"
-\t\t\t\consists "Skip_event_swallow_translator"
-\t\t\t\consists "Axis_group_engraver"
+\t\t\t\\consists "Output_property_engraver"
+\t\t\t\\consists "Script_engraver"
+\t\t\t\\consists "Text_engraver"
+\t\t\t\\consists "Skip_event_swallow_translator"
+\t\t\t\\consists "Axis_group_engraver"
 \t\t}
 \t\t% End VisAnnotation Context
 \t\t
 \t\t% Modify "StaffGroup" context to accept VisAnnotation context.
-\t\t\context
+\t\t\\context
 \t\t{
-\t\t\t\StaffGroup
+\t\t\t\\StaffGroup
 \t\t\t\\accepts VisAnnotation
 \t\t}
 \t}\n}\n
