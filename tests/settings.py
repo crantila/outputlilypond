@@ -21,7 +21,7 @@
 #--------------------------------------------------------------------------------------------------
 
 import unittest
-from LilyPondSettings import LilyPondSettings
+from outputlilypond.settings import LilyPondSettings
 
 
 class TestSettings(unittest.TestCase):
@@ -125,7 +125,7 @@ class TestSettings(unittest.TestCase):
         self.assertRaises(KeyError, self.s.get_property, 42)
 
 
-class Test_Detect_LilyPond(unittest.TestCase):
+class TestDetectLilyPond(unittest.TestCase):
     # detect_lilypond() -------------------------------------
     def test_for_path(self):
         # NB: You have to write in your path and version!
@@ -159,5 +159,5 @@ class Test_Detect_LilyPond(unittest.TestCase):
 #-------------------------------------------------------------------------------
 # Definitions
 #-------------------------------------------------------------------------------
-test_settings_suite = unittest.TestLoader().loadTestsFromTestCase(TestSettings)
-detect_lilypond_suite = unittest.TestLoader().loadTestsFromTestCase(Test_Detect_LilyPond)
+SETTINGS_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestSettings)
+DETECT_LILYPOND_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDetectLilyPond)

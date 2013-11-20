@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------------------------
-# Filename: LilyPondSettings.py
+# Filename: settings.py
 # Purpose: Manages the runtime settings for OutputLilyPond
 #
 # Copyright (C) 2012, 2013 Christopher Antila
@@ -20,11 +20,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #--------------------------------------------------------------------------------------------------
 """
-The LilyPondSettings module manages runtime settings for the OutputLilyPond
-module.
+The :mod:`settings` module holds :class:`LilyPondSettings`, which prepares and stores settings for
+outputlilypond, along with various internally-used functions.
 """
 
-# Python
 from subprocess import Popen, PIPE  # for running LilyPond on Linux
 from platform import system as which_os
 

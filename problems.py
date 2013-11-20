@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------------------------
-# Filename: LilyPondProblems.py
+# Filename: problems.py
 # Purpose: Exceptions and Errors for OutputLilyPond
 #
 # Copyright (C) 2012, 2013 Christopher Antila
@@ -20,28 +20,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #--------------------------------------------------------------------------------------------------
 """
-The LilyPondProblems module contains error and warning classes for the
-output_LilyPond program.
+Error and warning classes for the outputlilypond module.
 """
-
-
-class BadFileError(Exception):
-    """
-    output_LilyPond uses this error when there is a problem loading or handling
-    a file, not related to a more specific musical element.
-    """
-    pass
 
 
 class UnidentifiedObjectError(Exception):
     """
-    When something can't be identified.
+    When a music21 object can't be identified.
     """
     pass
 
 
 class ImpossibleToProcessError(Exception):
     """
-    When something is identified, but for some reason cannot be processed.
+    When something is identified, but has an invalid type or property, and cannot be processed.
     """
     pass

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------------------------
-# Filename: TestProcessMeasure.py
-# Purpose: Integration tests for MeasureMaker
+# Filename: integration_tests.py
+# Purpose: Integration tests for outputlilypond
 #
 # Copyright (C) 2012, 2013 Christopher Antila
 #
@@ -21,9 +21,10 @@
 #--------------------------------------------------------------------------------------------------
 
 import unittest
-from test_corpus import process_measure_unit
 from music21 import stream, key, note, meter, converter
-from OutputLilyPond import MeasureMaker
+from outputlilypond.functions import measure_to_lily, stream_to_lily
+from outputlilypond.test_corpus import process_measure_unit
+from outputlilypond.settings import LilyPondSettings
 
 
 class TestMeasureMaker(unittest.TestCase):
@@ -32,8 +33,8 @@ class TestMeasureMaker(unittest.TestCase):
         # were no events
         meas = stream.Measure()
         meas.append(key.KeySignature(-3))
-        actual = MeasureMaker(meas)
-        self.assertEqual(actual.get_lilypond(), u'\t\key ees \major\n\t|\n')
+        actual = measure_to_lily(meas)
+        self.assertEqual(actual, u'\t\\key ees \\major\n\t|\n')
 
     def test_some_tuplets_1(self):
         # Complete measure starts with tuplets, filled with rests
@@ -46,8 +47,8 @@ class TestMeasureMaker(unittest.TestCase):
         test_in1.append(note.Rest(quarterLength=1.0))
         test_in1.append(note.Rest(quarterLength=2.0))
         expect = u"\t\\time 4/4\n\t\\times 2/3 { c'16 d'16 e'16 } r8 r4 r2 |\n"
-        actual = MeasureMaker(test_in1)
-        self.assertEqual(actual.get_lilypond(), expect)
+        actual = measure_to_lily(test_in1)
+        self.assertEqual(actual, expect)
 
     def test_some_tuplets_2(self):
         # Partial measure starts with tuplets (multiple components)
@@ -56,51 +57,51 @@ class TestMeasureMaker(unittest.TestCase):
         test_in1.append(note.Note('C4', quarterLength=0.16666))
         test_in1.append(note.Note('D4', quarterLength=0.16666))
         test_in1.append(note.Note('E4', quarterLength=0.16666))
-        expect = """\t\partial 8
+        expect = """\t\\partial 8
 \t\\time 4/4
 \t\\times 2/3 { c'16 d'16 e'16 } |
 """
-        actual = MeasureMaker(test_in1, True)
-        self.assertEqual(actual.get_lilypond(), expect)
+        actual = measure_to_lily(test_in1, True)
+        self.assertEqual(actual, expect)
 
     def test_bwv77_bass_part_1(self):
         bass_part = converter.parse('test_corpus/bwv77.mxl').parts[3]
         # first measure
-        actual = MeasureMaker(bass_part[1], True)
-        expect = u'\t\partial 4\n\t\clef bass\n\t\key b \minor\n\t\\time 4/4\n\te4 |\n'
+        actual = measure_to_lily(bass_part[1], True)
+        expect = u'\t\\partial 4\n\t\\clef bass\n\t\\key b \\minor\n\t\\time 4/4\n\te4 |\n'
         # tests
-        self.assertEqual(actual.get_lilypond(), expect)
+        self.assertEqual(actual, expect)
 
     def test_bwv77_bass_part_2(self):
         bass_part = converter.parse('test_corpus/bwv77.mxl').parts[3]
         # third measure
-        actual = MeasureMaker(bass_part[4])
+        actual = measure_to_lily(bass_part[4])
         expect = u'\tb4 a4 g4 fis4 |\n'
-        self.assertEqual(actual.get_lilypond(), expect)
+        self.assertEqual(actual, expect)
 
     def test_bwv77_bass_part_3(self):
         bass_part = converter.parse('test_corpus/bwv77.mxl').parts[3]
         # final measure
-        actual = MeasureMaker(bass_part[-1], True)
+        actual = measure_to_lily(bass_part[-1], True)
         expect = u'\t\\partial 2.\n\tg8 e8 fis4 b,4 |\n\t\\bar "|."\n'
-        self.assertEqual(actual.get_lilypond(), expect)
+        self.assertEqual(actual, expect)
 
     def test_invisibility_1(self):
         # test the .lily_invisible property, which should cause everything in a Measure to have
         # the #'transparent property set to ##t
-        actual = MeasureMaker(process_measure_unit.invisibility_1)
+        actual = measure_to_lily(process_measure_unit.invisibility_1)
         expect = u'''\t\\stopStaff
 \t\\once \\override Staff.TimeSignature #'transparent = ##t
 \t\\time 4/4
 \ts1 |
 \t\\startStaff
 '''
-        self.assertEqual(actual.get_lilypond(), expect)
+        self.assertEqual(actual, expect)
 
     def test_invisibility_2(self):
         # test the .lily_invisible property, which should cause everything in a Measure to have
         # the #'transparent property set to ##t
-        actual = MeasureMaker(process_measure_unit.invisibility_2)
+        actual = measure_to_lily(process_measure_unit.invisibility_2)
         expect = '''\t\\stopStaff
 \t\\once \\override Staff.TimeSignature #'transparent = ##t
 \t\\time 4/4
@@ -109,12 +110,12 @@ class TestMeasureMaker(unittest.TestCase):
 \ts1 |
 \t\\startStaff
 '''
-        self.assertEqual(actual.get_lilypond(), expect)
+        self.assertEqual(actual, expect)
 
     def test_invisibility_3(self):
         # test the .lily_invisible property, which should cause everything in a Measure to have
         # the #'transparent property set to ##t
-        actual = MeasureMaker(process_measure_unit.invisibility_3)
+        actual = measure_to_lily(process_measure_unit.invisibility_3)
         expect = '''\t\\stopStaff
 \t\\once \\override Staff.TimeSignature #'transparent = ##t
 \t\\time 4/4
@@ -125,18 +126,18 @@ class TestMeasureMaker(unittest.TestCase):
 \ts1 |
 \t\\startStaff
 '''
-        self.assertEqual(actual.get_lilypond(), expect)
+        self.assertEqual(actual, expect)
 
     def test_ave_maris_stella_1(self):
         # "ams" is "ave maris stella"... what were you thinking?
         ams = converter.parse('test_corpus/Jos2308.krn')
         # First four measures, second highest part
-        actual = MeasureMaker(ams.parts[1][9]).get_lilypond()
-        actual += MeasureMaker(ams.parts[1][10]).get_lilypond()
-        actual += MeasureMaker(ams.parts[1][11]).get_lilypond()
-        actual += MeasureMaker(ams.parts[1][12]).get_lilypond()
-        expect = u"""\t\clef treble
-\t\key f \major
+        actual = measure_to_lily(ams.parts[1][9])
+        actual += measure_to_lily(ams.parts[1][10])
+        actual += measure_to_lily(ams.parts[1][11])
+        actual += measure_to_lily(ams.parts[1][12])
+        expect = u"""\t\\clef treble
+\t\\key f \\major
 \t\\time 2/1
 \tr1 g'1 |
 \td''1 r1 |
@@ -148,9 +149,9 @@ class TestMeasureMaker(unittest.TestCase):
     def test_ave_maris_stella_2(self):
         ams = converter.parse('test_corpus/Jos2308.krn')
         # Measures 125-7, lowest part
-        actual = MeasureMaker(ams.parts[3][133]).get_lilypond()
-        actual += MeasureMaker(ams.parts[3][134]).get_lilypond()
-        actual += MeasureMaker(ams.parts[3][135]).get_lilypond()
+        actual = measure_to_lily(ams.parts[3][133])
+        actual += measure_to_lily(ams.parts[3][134])
+        actual += measure_to_lily(ams.parts[3][135])
         expect = u"""\tg\\breve~ |
 \tg\\breve |
 \t\\bar "||"
@@ -161,12 +162,56 @@ class TestMeasureMaker(unittest.TestCase):
     def test_ave_maris_stella_3(self):
         ams = converter.parse('test_corpus/Jos2308.krn')
         # Measure 107, second-lowest part (tuplets)
-        actual = MeasureMaker(ams.parts[2][115]).get_lilypond()
+        actual = measure_to_lily(ams.parts[2][115])
         expect = u"\t\\times 2/3 { e'1 c'1 d'1 } |\n"
+        self.assertEqual(actual, expect)
+
+
+class TestProcessStreamPart(unittest.TestCase):
+    # NOTE: We have to pull a bit of trickery here, because there is some
+    # randomness involved in part names.
+    def test_first_measures_of_bach(self):
+        # first two measures of soprano part
+        the_settings = LilyPondSettings()
+        the_score = converter.parse('test_corpus/bwv77.mxl')
+        actual = stream_to_lily(the_score.parts[0][:3], the_settings)
+        actual = actual[8:]  # remove the randomized part name
+        expect = u""" =
+{
+\t%% Soprano
+\t\set Staff.instrumentName = \markup{ "Soprano" }
+\t\set Staff.shortInstrumentName = \markup{ "Sop." }
+\t\partial 4
+\t\clef treble
+\t\key b \minor
+\t\\time 4/4
+\te'8 fis'8 |
+\tg'4 a'4 b'4 a'4 |
+}
+"""
+        self.assertEqual(actual, expect)
+
+    def test_first_measures_of_Josquin(self):
+        # first three measures of highest part
+        the_settings = LilyPondSettings()
+        the_score = converter.parse('test_corpus/Jos2308.krn')
+        actual = stream_to_lily(the_score.parts[0][:12], the_settings)
+        actual = actual[8:]  # remove the randomized part name
+        expect = u""" =
+{
+\t\clef treble
+\t\key f \major
+\t\\time 2/1
+\tg'1 d''1 |
+\tr1 g'1 |
+\td''1 r1 |
+}
+"""
         self.assertEqual(actual, expect)
 
 
 #-------------------------------------------------------------------------------
 # Definitions
 #-------------------------------------------------------------------------------
-test_measure_maker_suite = unittest.TestLoader().loadTestsFromTestCase(TestMeasureMaker)
+MEASURE_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestMeasureMaker)
+STREAM_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestProcessStreamPart)
