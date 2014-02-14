@@ -4,7 +4,7 @@
 # Filename: functions.py
 # Purpose: Converter functions used by outputlilypond.
 #
-# Copyright (C) 2012, 2013 Christopher Antila
+# Copyright (C) 2012, 2013, 2014 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -530,12 +530,11 @@ def metadata_to_lily(metad, setts=None):
     :param metad: The :class:`Metadata` object to convert.
     :type metad: :class:`music21.metadata.Metadata`
     :param setts: An optional settings object.
-    :type setts: :class:`settings.LilyPondSettings`
+    :type setts: :class:`~settings.LilyPondSettings`
 
     :returns: The LilyPond-format notation for this metadata object.
     :rtype: unicode string
     """
-    # TODO: there are no tests for anything here
 
     if setts is None:
         setts = settings.LilyPondSettings()
@@ -544,27 +543,27 @@ def metadata_to_lily(metad, setts=None):
 
     if metad.composer is not None:
         post.extend([u'\tcomposer = \\markup{ "', metad.composer, u'" }\n'])
-    if 'None' != metad.date:
+    if u'None' != unicode(metad.date):
         post.extend([u'\tdate = "', unicode(metad.date), u'"\n'])
     if metad.movementName is not None:
         if None != metad.movementNumber:
-            post.extend([post, u'\tsubtitle = \\markup{ "',
+            post.extend([u'\tsubtitle = \\markup{ "',
                          unicode(metad.movementNumber), u': ',
                          metad.movementName, u'" }\n'])
         else:
-            post.extend([post, u'\tsubtitle = \\markup{ "',
+            post.extend([u'\tsubtitle = \\markup{ "',
                          metad.movementName, u'" }\n'])
     if metad.opusNumber is not None:
-        post.extend([post, u'\topus = "', unicode(metad.opusNumber), u'"\n'])
+        post.extend([u'\topus = "', unicode(metad.opusNumber), u'"\n'])
     if metad.title is not None:
         if metad.alternativeTitle is not None:
-            post.extend([post, u'\ttitle = \\markup{ \"', metad.title,
-                u'(\\"' + metad.alternativeTitle + u'\\")', u'" }\n'])
+            post.extend([u'\ttitle = \\markup{ \"', metad.title,
+                         u'(\\"' + metad.alternativeTitle + u'\\")', u'" }\n'])
         else:
-            post.extend([post, u'\ttitle = \\markup{ \"', metad.title, u'" }\n'])
+            post.extend([u'\ttitle = \\markup{ \"', metad.title, u'" }\n'])
     # Extra Formatting Options
     if setts.get_property('tagline') is None:
-        post.append(post, u'\ttagline = ""\n')
+        post.append(u'\ttagline = ""\n')
     else:
         post.extend([u'\ttagline = "', setts.get_property('tagline'), '"\n'])
     # close the \header{} block, join, and return!

@@ -24,9 +24,9 @@ Unit tests for the "outputlilypond" module.
 """
 
 import unittest
+import mock
 from music21 import clef, bar, duration, note, pitch, tie, chord, metadata
-from outputlilypond import functions
-from outputlilypond import problems
+from outputlilypond import functions, problems, settings
 
 # Don't worry about missing docstrings
 # pylint: disable=C0111
@@ -526,6 +526,139 @@ class TestChordMaker(unittest.TestCase):
         self.assertEqual(actual, expected)
 
 
+class TestMetadataToLily(unittest.TestCase):
+    def test_metadata_1(self):
+        # In this test...
+        # - with date
+        # - without composer
+        # - with movementName not movementNumber
+        # - with opusNumber
+        # - with title and alternativeTitle
+        # - with tagline in Settings
+        # prepare the mock Metadata and Settings objects (NOTE: surely there's a better way?)
+        mock_meta = mock.MagicMock(spec_set=metadata.Metadata)
+        mock_date = mock.PropertyMock(return_value=u'2010')
+        mock_composer = mock.PropertyMock(return_value=None)
+        mock_movement_name = mock.PropertyMock(return_value=u'Winter Bones')
+        mock_movement_num = mock.PropertyMock(return_value=None)
+        mock_opus_num = mock.PropertyMock(return_value=5)
+        mock_title = mock.PropertyMock(return_value=u'The Five Ghosts')
+        mock_alt_title = mock.PropertyMock(return_value=u'The Séance')
+        type(mock_meta).date = mock_date
+        type(mock_meta).composer = mock_composer
+        type(mock_meta).movementName = mock_movement_name
+        type(mock_meta).movementNumber = mock_movement_num
+        type(mock_meta).opusNumber = mock_opus_num
+        type(mock_meta).title = mock_title
+        type(mock_meta).alternativeTitle = mock_alt_title
+        mock_sett = mock.MagicMock(spec_set=settings.LilyPondSettings)
+        mock_sett.get_property.return_value = u'Silly tagline!'
+        expected = u"""\\header {
+\tdate = "2010"
+\tsubtitle = \\markup{ "Winter Bones" }
+\topus = "5"
+\ttitle = \\markup{ "The Five Ghosts(\\"The Séance\\")" }
+\ttagline = "Silly tagline!"
+}\n"""
+        # run the test
+        actual = functions.metadata_to_lily(mock_meta, mock_sett)
+        # verify the result
+        self.assertEqual(2, mock_date.call_count)
+        self.assertEqual(1, mock_composer.call_count)
+        self.assertEqual(2, mock_movement_name.call_count)
+        self.assertEqual(1, mock_movement_num.call_count)
+        self.assertEqual(2, mock_opus_num.call_count)
+        self.assertEqual(2, mock_title.call_count)
+        self.assertEqual(2, mock_alt_title.call_count)
+        self.assertEqual(expected, actual)
+
+    def test_metadata_2(self):
+        # In this test...
+        # - with composer
+        # - without date
+        # - with movementName and movementNumber
+        # - without opusNumber
+        # - with title not alternativeTitle
+        # - without tagline in Settings
+        # prepare the mock Metadata and Settings objects (NOTE: surely there's a better way?)
+        mock_meta = mock.MagicMock(spec_set=metadata.Metadata)
+        mock_date = mock.PropertyMock(return_value=None)
+        mock_composer = mock.PropertyMock(return_value=u'Stars')
+        mock_movement_name = mock.PropertyMock(return_value=u'Winter Bones')
+        mock_movement_num = mock.PropertyMock(return_value=11)
+        mock_opus_num = mock.PropertyMock(return_value=None)
+        mock_title = mock.PropertyMock(return_value=u'The Five Ghosts')
+        mock_alt_title = mock.PropertyMock(return_value=None)
+        type(mock_meta).date = mock_date
+        type(mock_meta).composer = mock_composer
+        type(mock_meta).movementName = mock_movement_name
+        type(mock_meta).movementNumber = mock_movement_num
+        type(mock_meta).opusNumber = mock_opus_num
+        type(mock_meta).title = mock_title
+        type(mock_meta).alternativeTitle = mock_alt_title
+        mock_sett = mock.MagicMock(spec_set=settings.LilyPondSettings)
+        mock_sett.get_property.return_value = None
+        expected = u"""\\header {
+\tcomposer = \\markup{ "Stars" }
+\tsubtitle = \\markup{ "11: Winter Bones" }
+\ttitle = \\markup{ "The Five Ghosts" }
+\ttagline = ""
+}\n"""
+        # run the test
+        actual = functions.metadata_to_lily(mock_meta, mock_sett)
+        # verify the result
+        self.assertEqual(1, mock_date.call_count)
+        self.assertEqual(2, mock_composer.call_count)
+        self.assertEqual(2, mock_movement_name.call_count)
+        self.assertEqual(2, mock_movement_num.call_count)
+        self.assertEqual(1, mock_opus_num.call_count)
+        self.assertEqual(2, mock_title.call_count)
+        self.assertEqual(1, mock_alt_title.call_count)
+        self.assertEqual(expected, actual)
+
+    def test_metadata_3(self):
+        # In this test...
+        # - without date
+        # - with composer
+        # - without movementName
+        # - without opus
+        # - without title
+        # - without tagline in Settings
+        # prepare the mock Metadata and Settings objects (NOTE: surely there's a better way?)
+        mock_meta = mock.MagicMock(spec_set=metadata.Metadata)
+        mock_date = mock.PropertyMock(return_value=None)
+        mock_composer = mock.PropertyMock(return_value=u'Stars')
+        mock_movement_name = mock.PropertyMock(return_value=None)
+        mock_movement_num = mock.PropertyMock(return_value=None)
+        mock_opus_num = mock.PropertyMock(return_value=None)
+        mock_title = mock.PropertyMock(return_value=None)
+        mock_alt_title = mock.PropertyMock(return_value=None)
+        type(mock_meta).date = mock_date
+        type(mock_meta).composer = mock_composer
+        type(mock_meta).movementName = mock_movement_name
+        type(mock_meta).movementNumber = mock_movement_num
+        type(mock_meta).opusNumber = mock_opus_num
+        type(mock_meta).title = mock_title
+        type(mock_meta).alternativeTitle = mock_alt_title
+        mock_sett = mock.MagicMock(spec_set=settings.LilyPondSettings)
+        mock_sett.get_property.return_value = u'Silly tagline!'
+        expected = u"""\\header {
+\tcomposer = \\markup{ "Stars" }
+\ttagline = "Silly tagline!"
+}\n"""
+        # run the test
+        actual = functions.metadata_to_lily(mock_meta, mock_sett)
+        # verify the result
+        self.assertEqual(1, mock_date.call_count)
+        self.assertEqual(2, mock_composer.call_count)
+        self.assertEqual(1, mock_movement_name.call_count)
+        self.assertEqual(0, mock_movement_num.call_count)
+        self.assertEqual(1, mock_opus_num.call_count)
+        self.assertEqual(1, mock_title.call_count)
+        self.assertEqual(0, mock_alt_title.call_count)
+        self.assertEqual(expected, actual)
+
+
 # Define test suites
 OCTAVENUM_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestOctaveNumToLily)
 PITCH_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestPitchToLily)
@@ -534,3 +667,4 @@ NOTE_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestNoteToLily)
 BARLINE_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestBarlineToLily)
 CLEF_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestClefToLily)
 CHORD_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestChordMaker)
+METADATA_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestMetadataToLily)
