@@ -4,7 +4,7 @@
 # Filename: __main__.py
 # Purpose: Principal file for the outputlilypond module.
 #
-# Copyright (C) 2012, 2013 Christopher Antila
+# Copyright (C) 2012, 2013, 2014 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -150,7 +150,7 @@ class LilyMultiprocessor(object):
             if isinstance(self._score[i], stream.Part):
                 if hasattr(self._score[i], u'lily_analysis_voice') and \
                 self._score[i].lily_analysis_voice is True:
-                        self._setts._analysis_notation_parts.append(i)
+                    self._setts._analysis_notation_parts.append(i)
                 self._pool.apply_async(functions.stream_to_lily,
                                        (converter.freezeStr(self._score[i]), self._setts, i),
                                        callback=self.callback)

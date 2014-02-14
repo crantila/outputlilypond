@@ -4,7 +4,7 @@
 # Filename: unit_tests.py
 # Purpose: Unit tests for OutputLilyPond
 #
-# Copyright (C) 2012, 2013 Christopher Antila
+# Copyright (C) 2012, 2013, 2014 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -19,17 +19,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #--------------------------------------------------------------------------------------------------
+"""
+Unit tests for the "outputlilypond" module.
+"""
 
 import unittest
-from music21 import clef, bar, duration, note, pitch, tie, chord
+from music21 import clef, bar, duration, note, pitch, tie, chord, metadata
 from outputlilypond import functions
 from outputlilypond import problems
 
-#from OutputLilyPond import _octave_num_to_lily, _pitch_to_lily, _duration_to_lily, NoteMaker
-#from OutputLilyPond import _barline_to_lily, _clef_to_lily, ChordMaker
-#from music21 import note, pitch, duration, tie, bar, clef, chord
-# from test_corpus import process_measure_unit
-#from LilyPondProblems import problems.UnidentifiedObjectError, problems.ImpossibleToProcessError
+# Don't worry about missing docstrings
+# pylint: disable=C0111
+# Don't worry about "too many public methods"
+# pylint: disable=R0904
 
 
 class TestOctaveNumToLily(unittest.TestCase):
@@ -113,7 +115,7 @@ class TestDurationToLily(unittest.TestCase):
         self.assertEqual(functions.duration_to_lily(duration.Duration(1.0)), '4')
 
     def test_duration_to_lily_2(self):
-        self.assertEqual(functions.duration_to_lily(duration.Duration(16.0)), '\longa')
+        self.assertEqual(functions.duration_to_lily(duration.Duration(16.0)), '\\longa')
 
     def test_duration_to_lily_3(self):
         self.assertEqual(functions.duration_to_lily(duration.Duration(0.0625)), '64')
@@ -138,7 +140,7 @@ class TestDurationToLily(unittest.TestCase):
         self.assertEqual(functions.duration_to_lily(duration.Duration(1.0)), '4')
 
     def test_duration_to_lily_10(self):
-        self.assertEqual(functions.duration_to_lily(duration.Duration(16.0)), '\longa')
+        self.assertEqual(functions.duration_to_lily(duration.Duration(16.0)), '\\longa')
 
     def test_duration_to_lily_11(self):
         self.assertEqual(functions.duration_to_lily(duration.Duration(0.0625)), '64')
@@ -234,7 +236,7 @@ class TestNoteToLily(unittest.TestCase):
 
     def test_note_to_lily_2(self):
         actual = functions.note_to_lily(note.Note('E#0', quarterLength=16.0))
-        expected = u"eis,,,\longa"
+        expected = u"eis,,,\\longa"
         self.assertEqual(actual, expected)
 
     def test_note_to_lily_3(self):
@@ -254,7 +256,7 @@ class TestNoteToLily(unittest.TestCase):
 
     def test_note_to_lily_6(self):
         actual = functions.note_to_lily(note.Rest(quarterLength=16.0))
-        expected = u"r\longa"
+        expected = u"r\\longa"
         self.assertEqual(actual, expected)
 
     def test_note_to_lily_7(self):
@@ -263,35 +265,35 @@ class TestNoteToLily(unittest.TestCase):
         self.assertEqual(actual, expected)
 
     def test_note_to_lily_8(self):
-        test_Note_1 = note.Note('C4', quarterLength=1.0)
-        test_Note_1.tie = tie.Tie('start')
-        actual = functions.note_to_lily(test_Note_1)
+        test_note_1 = note.Note('C4', quarterLength=1.0)
+        test_note_1.tie = tie.Tie('start')
+        actual = functions.note_to_lily(test_note_1)
         expected = u"c'4~"
         self.assertEqual(actual, expected)
 
     def test_note_to_lily_9(self):
-        test_Note_1 = note.Note('C4', quarterLength=1.0)
-        test_Note_1.tie = tie.Tie('start')
-        test_Note_1.lily_markup = '_\markup{ "example!" }'
-        actual = functions.note_to_lily(test_Note_1)
-        expected = u"c'4~_\markup{ \"example!\" }"
+        test_note_1 = note.Note('C4', quarterLength=1.0)
+        test_note_1.tie = tie.Tie('start')
+        test_note_1.lily_markup = '_\\markup{ "example!" }'
+        actual = functions.note_to_lily(test_note_1)
+        expected = u"c'4~_\\markup{ \"example!\" }"
         self.assertEqual(actual, expected)
 
     def test_note_to_lily_9a(self):
-        test_Note_1 = note.Note('C4', quarterLength=1.0)
-        test_Note_1.tie = tie.Tie('start')
-        test_Note_1.lily_markup = '_\markup{ "example!" }'
-        test_Note_1.lily_invisible = True
-        actual = functions.note_to_lily(test_Note_1)
-        expected = u"s4~_\markup{ \"example!\" }"
+        test_note_1 = note.Note('C4', quarterLength=1.0)
+        test_note_1.tie = tie.Tie('start')
+        test_note_1.lily_markup = '_\\markup{ "example!" }'
+        test_note_1.lily_invisible = True
+        actual = functions.note_to_lily(test_note_1)
+        expected = u"s4~_\\markup{ \"example!\" }"
         self.assertEqual(actual, expected)
 
     def test_note_to_lily_9b(self):
-        test_Note_1 = note.Rest(quarterLength=1.0)
-        test_Note_1.tie = tie.Tie('start')
-        test_Note_1.lily_markup = '_\markup{ "example!" }'
-        actual = functions.note_to_lily(test_Note_1)
-        expected = u"r4~_\markup{ \"example!\" }"
+        test_note_1 = note.Rest(quarterLength=1.0)
+        test_note_1.tie = tie.Tie('start')
+        test_note_1.lily_markup = '_\\markup{ "example!" }'
+        actual = functions.note_to_lily(test_note_1)
+        expected = u"r4~_\\markup{ \"example!\" }"
         self.assertEqual(actual, expected)
 
     def test_note_to_lily_11(self):
@@ -371,7 +373,7 @@ class TestBarlineToLily(unittest.TestCase):
     def test_barline_to_lily_12(self):
         # error
         bee_ell = bar.Barline('regular')
-        bee_ell._style = 'marmalade sun for everyone'
+        bee_ell._style = u'marmalade sun for everyone'  # pylint: disable=W0212
         self.assertRaises(problems.UnidentifiedObjectError, functions.barline_to_lily, bee_ell)
 
 

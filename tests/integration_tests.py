@@ -4,7 +4,7 @@
 # Filename: integration_tests.py
 # Purpose: Integration tests for outputlilypond
 #
-# Copyright (C) 2012, 2013 Christopher Antila
+# Copyright (C) 2012, 2013, 2014 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #--------------------------------------------------------------------------------------------------
+
+# Don't worry about missing docstrings
+# pylint: disable=C0111
+# Don't worry about "too many public methods"
+# pylint: disable=R0904
 
 import unittest
 from music21 import stream, key, note, meter, converter
@@ -179,11 +184,11 @@ class TestProcessStreamPart(unittest.TestCase):
         expect = u""" =
 {
 \t%% Soprano
-\t\set Staff.instrumentName = \markup{ "Soprano" }
-\t\set Staff.shortInstrumentName = \markup{ "Sop." }
-\t\partial 4
-\t\clef treble
-\t\key b \minor
+\t\\set Staff.instrumentName = \\markup{ "Soprano" }
+\t\\set Staff.shortInstrumentName = \\markup{ "Sop." }
+\t\\partial 4
+\t\\clef treble
+\t\\key b \\minor
 \t\\time 4/4
 \te'8 fis'8 |
 \tg'4 a'4 b'4 a'4 |
@@ -191,7 +196,7 @@ class TestProcessStreamPart(unittest.TestCase):
 """
         self.assertEqual(actual, expect)
 
-    def test_first_measures_of_Josquin(self):
+    def test_first_measures_of_josquin(self):
         # first three measures of highest part
         the_settings = LilyPondSettings()
         the_score = converter.parse('test_corpus/Jos2308.krn')
@@ -199,8 +204,8 @@ class TestProcessStreamPart(unittest.TestCase):
         actual = actual[8:]  # remove the randomized part name
         expect = u""" =
 {
-\t\clef treble
-\t\key f \major
+\t\\clef treble
+\t\\key f \\major
 \t\\time 2/1
 \tg'1 d''1 |
 \tr1 g'1 |

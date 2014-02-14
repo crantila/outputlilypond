@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------------------------
 # Filename: __init__.py
-# Purpose: Init file for OutputLilyPond
+# Purpose: Init file for outputlilypond
 #
-# Copyright (C) 2012, 2013 Christopher Antila
+# Copyright (C) 2012, 2013, 2014 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -19,6 +19,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #--------------------------------------------------------------------------------------------------
+"""
+Init file for outputlilypond.
+"""
 
 # Ensure we can import "outputlilypond"
 import imp

@@ -4,7 +4,7 @@
 # Filename: settings.py
 # Purpose: Manages the runtime settings for OutputLilyPond
 #
-# Copyright (C) 2012, 2013 Christopher Antila
+# Copyright (C) 2012, 2013, 2014 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -43,7 +43,7 @@ class LilyPondSettings:
     - lilypond_version : a str that contains the LilyPond version (default is
         auto-detection of whatever's installed)
     - lilypond_path : a str that is the full path to the LilyPond executable
-    """
+    """  # pytlint disable=W1401
 
     def __init__(self):
         """
@@ -82,12 +82,13 @@ class LilyPondSettings:
         >>> the_settings.set_property('indent', '4\mm')
         >>> the_settings.get_property('indent')
         '4\mm'
-        """
-        # If the setting doesn't already exist, this will trigger a KeyError
-        self._secret_settings[setting_name]
 
-        # And if we're still going, it means we can set this setting
-        self._secret_settings[setting_name] = setting_value
+        :raises: :exc:`KeyError` if the ``setting_name`` does not exist.
+        """  # pytlint disable=W1401
+        if setting_name in self._secret_settings:
+            self._secret_settings[setting_name] = setting_value
+        else:
+            raise KeyError(u'Setting does not exist: ' + unicode(setting_name))
 
     def get_property(self, setting_name):
         """
