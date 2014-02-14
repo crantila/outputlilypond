@@ -27,3 +27,5 @@ try:
 except ImportError:
     import sys
     sys.path.insert(0, u'..')
+
+from outputlilypond.__main__ import run_lilypond, process_score
