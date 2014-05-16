@@ -190,14 +190,14 @@ class LilyMultiprocessor(object):
 \t\t{
 \t\t\t\\type "Engraver_group"
 \t\t\t\\name VisAnnotation
-\t\t\t\\alias Voice
+\t\t\t\\alias Staff
 \t\t\t\\consists "Output_property_engraver"
 \t\t\t\\consists "Script_engraver"
 \t\t\t\\consists "Text_engraver"
-\t\t\t\\consists "Skip_event_swallow_translator"
 \t\t\t\\consists "Axis_group_engraver"
+\t\t\t\\consists "Instrument_name_engraver"
 \t\t}
-\t\t% End VisAnnotation Context
+\t\t\% \End VisAnnotation Context
 \t\t
 \t\t% Modify "StaffGroup" context to accept VisAnnotation context.
 \t\t\\context
