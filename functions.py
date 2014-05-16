@@ -480,10 +480,9 @@ def measure_to_lily(meas, incomplete=False):
             pass
         # We don't know what it is, and should probably figure out!
         else:
-            msg = 'Unknown object in Measure ' + unicode(meas.number) + ': ' + \
-                unicode(obj)
-            print(msg)  # DEBUG
-            print('   its type is ' + unicode(type(obj)))  # DEBUG
+            pass
+            #msg = u'Unknown object in m.%s of type %s.' % (meas.number, type(obj))
+            #print(msg)  # DEBUG
             #raise UnidentifiedObjectError(msg)
 
     # Append a bar-check symbol, if relevant
@@ -654,8 +653,9 @@ def part_to_lily(part, setts):
                 # exist only to help music21 developers.
                 pass
             else:
-                msg = 'Unknown object in Stream while processing Part: '
-                print(msg)  # DEBUG
+                pass
+                #msg = u'Unknown object in Stream; type is %s.' % type(thing)
+                #print(msg)  # DEBUG
                 #raise UnidentifiedObjectError(msg + unicode(thing))
     # finally, to close the part, join, and return!
     post.append(u"}\n")
@@ -739,9 +739,9 @@ def stream_to_lily(the_stream, setts, the_index=None):
         post = u''
     else:
         # Anything else, we don't know what it is!
-        msg = u'Unknown object in Stream: ' + unicode(the_stream)
+        msg = u'Unknown object in Stream; type is %s.' % type(the_stream)  # DEBUG
         print(msg)  # DEBUG
-        post = u''  # DEBUG
+        post = u''
         #raise UnidentifiedObjectError(msg)
 
     if the_index is not None and (obj_type == stream.Part or obj_type == stream.PartStaff):
