@@ -83,10 +83,10 @@ def string_of_n_letters(n):
     :returns: A string of ``n`` pseudo-random lowercase letters.
     :rtype: unicode string
     """
-    post = []
-    for _ in repeat(None, n):
-        post.append(random.choice(u'qwertyuiopasdfghjklzxcvbnm'))
-    return ''.join(post)
+    if 0 == n:
+        return u''
+    else:
+        return random.choice(u'qwertyuiopasdfghjklzxcvbnm') + string_of_n_letters(n - 1)
 
 
 def clef_to_lily(the_clef, append=u'\n', invisible=False):
