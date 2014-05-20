@@ -62,12 +62,10 @@ def run_lilypond(filename, the_settings=None):
     # NB2: this try/except block means, practically, that we'll use Popen (which is better) on
     # Linux, but where it fails (OS X), we'll use os.system()
     try:
-        print('!!! running LilyPond properly')  # DEBUG
         cmd = [the_settings.get_property('lilypond_path'), '--pdf', '-o', pdf_filename, filename]
         lily = Popen(cmd, stdout=PIPE, stderr=PIPE)
         lily.communicate(input=None)  # wait for 'lilypond' to exit; returns stdout
     except OSError:
-        print('!!! didn\'t run LilyPond properly')  # DEBUG
         os.system(the_settings.get_property('lilypond_path') + ' --pdf' + ' -o ' +
             pdf_filename + ' ' + filename)
 
@@ -124,7 +122,7 @@ class LilyMultiprocessor(object):
         self._finished_parts[result[0]] = result[1]
         self._setts._parts_in_this_score[result[0]] = result[2]
         if 0 == len(self._score):
-            print(u'outputlilypond: zero-length Score...')  # DEBUG
+            print('outputlilypond: zero-length Score...')  # wish we had a better solution
         if hasattr(self._score[result[0]], u'lily_analysis_voice') and \
         self._score[result[0]].lily_analysis_voice is True:
             self._setts._analysis_notation_parts.append(result[2])
@@ -164,12 +162,8 @@ class LilyMultiprocessor(object):
                 self._finished_parts[i] = functions.stream_to_lily(self._score[i], self._setts)
 
         # Wait for the multiprocessing to finish
-        print('!!! closing')  # DEBUG
         self._pool.close()
-        print('!!! joining')  # DEBUG
         self._pool.join()
-        print('!!! del')  # DEBUG
-        #self._pool = None
         del self._pool
 
         # Append the parts to the score we're building. In the future, it'll be important to
@@ -207,7 +201,7 @@ class LilyMultiprocessor(object):
 \t\t\t\\consists "Axis_group_engraver"
 \t\t\t\\consists "Instrument_name_engraver"
 \t\t}
-\t\t\% \End VisAnnotation Context
+\t\t% End VisAnnotation Context
 \t\t
 \t\t% Modify "StaffGroup" context to accept VisAnnotation context.
 \t\t\\context
