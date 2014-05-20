@@ -62,10 +62,12 @@ def run_lilypond(filename, the_settings=None):
     # NB2: this try/except block means, practically, that we'll use Popen (which is better) on
     # Linux, but where it fails (OS X), we'll use os.system()
     try:
+        print('!!! running LilyPond properly')  # DEBUG
         cmd = [the_settings.get_property('lilypond_path'), '--pdf', '-o', pdf_filename, filename]
         lily = Popen(cmd, stdout=PIPE, stderr=PIPE)
         lily.communicate(input=None)  # wait for 'lilypond' to exit; returns stdout
     except OSError:
+        print('!!! didn\'t run LilyPond properly')  # DEBUG
         os.system(the_settings.get_property('lilypond_path') + ' --pdf' + ' -o ' +
             pdf_filename + ' ' + filename)
 
@@ -134,10 +136,14 @@ class LilyMultiprocessor(object):
 
         # Things Before Parts:
         # Our mark! // Version // Paper size
-        post = [u'% LilyPond output from music21 via "outputlilypond"\n',
-            u'\\version "', self._setts.get_property('lilypond_version'), u'"\n\n',
-            u'\\paper {\n\t#(set-paper-size "', self._setts.get_property('paper_size'),
-            u'")\n}\n\n']
+        post = [u'%% LilyPond output from music21 via "outputlilypond"\n'
+                u'\\version "%s"\n'
+                u'\n'
+                u'\\paper {\n'
+                u'\t#(set-paper-size "%s")\n'
+                u'\t#(define left-margin (* 1.5 cm))\n'  # TODO: this should be a setting
+                u'}\n\n' % (self._setts.get_property('lilypond_version'),
+                            self._setts.get_property('paper_size'))]
 
         # Parts:
         # Initialize the length of finished "parts" (maybe they're other things, too, like Metadata
@@ -158,9 +164,13 @@ class LilyMultiprocessor(object):
                 self._finished_parts[i] = functions.stream_to_lily(self._score[i], self._setts)
 
         # Wait for the multiprocessing to finish
+        print('!!! closing')  # DEBUG
         self._pool.close()
+        print('!!! joining')  # DEBUG
         self._pool.join()
-        self._pool = None
+        print('!!! del')  # DEBUG
+        #self._pool = None
+        del self._pool
 
         # Append the parts to the score we're building. In the future, it'll be important to
         # re-arrange the parts if necessary, or maybe to filter things, so we'll keep everything
