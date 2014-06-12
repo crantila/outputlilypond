@@ -62,12 +62,12 @@ def run_lilypond(filename, the_settings=None):
     # NB2: this try/except block means, practically, that we'll use Popen (which is better) on
     # Linux, but where it fails (OS X), we'll use os.system()
     try:
-        cmd = [the_settings.get_property('lilypond_path'), '--pdf', '-o', pdf_filename, filename]
+        cmd = [the_settings.get_property('lilypond_path'), '-dno-point-and-click', '-dsafe=#t', '--pdf', '-o', pdf_filename, filename]
         lily = Popen(cmd, stdout=PIPE, stderr=PIPE)
         lily.communicate(input=None)  # wait for 'lilypond' to exit; returns stdout
     except OSError:
-        os.system(the_settings.get_property('lilypond_path') + ' --pdf' + ' -o ' +
-            pdf_filename + ' ' + filename)
+        os.system('%s -dno-point-and-click -dsafe=#t --pdf -o %s %s' %
+                  (the_settings.get_property('lilypond_path'), pdf_filename, filename))
 
 
 def process_score(the_score, the_settings=None):
