@@ -4,7 +4,7 @@
 # Filename: __main__.py
 # Purpose: Principal file for the outputlilypond module.
 #
-# Copyright (C) 2012, 2013, 2014 Christopher Antila
+# Copyright (C) 2012, 2013, 2014, 2106 Christopher Antila, Alexander Morgan
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -37,6 +37,10 @@ from subprocess import Popen, PIPE
 from multiprocessing import Pool
 from music21 import stream, converter
 from outputlilypond import functions, settings
+# For python 2 and 3 compatibility:
+import sys
+if sys.version_info[0] > 2:
+    xrange = range
 
 
 def run_lilypond(filename, the_settings=None):
