@@ -28,12 +28,11 @@ from setuptools import setup, Command
 
 setup(
     name = 'OutputLilyPond',
-    version = '0.0.1',
+    version = '1.0.0',
     packages = ['outputlilypond'],
 
     install_requires = (
         'music21 == 2.1.2',
-        'six',
     ),
     tests_require = (
         'pytest',
@@ -55,13 +54,8 @@ setup(
     classifiers =[
         'Development Status :: 5 - Production/Stable',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
+        'Programming Language :: Python :: 3',
         'Natural Language :: English',
         'Operating System :: OS Independent',
-        'Topic :: Internet :: WWW/HTTP :: HTTP Servers',
-        'Topic :: Software Development :: Interpreters',
     ],
 )
