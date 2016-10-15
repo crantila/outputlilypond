@@ -25,7 +25,7 @@ The :mod:`settings` module holds :class:`LilyPondSettings`, which prepares and s
 outputlilypond, along with various internally-used functions.
 """
 
-from subprocess import Popen, PIPE  # for running LilyPond on Linux
+import subprocess
 from platform import system as which_os
 # For python 2 and 3 compatibility:
 import sys
@@ -127,11 +127,10 @@ class LilyPondSettings:
             # On Linux/Unix systems, we'll assume a "bash"-like shell, and brace for impact if it's
             # OS X, which will complain
             try:
-                proc = Popen(['which', 'lilypond'], stdout=PIPE)
-                lily_path = proc.stdout.read()[:-1]  # remove terminating newline
-                proc = Popen([lily_path, '--version'], stdout=PIPE)
-                version = proc.stdout.read()
-                lily_verzh = version[version.find('LilyPond') + 9: version.find('\n')]
+                split_char = '\\n' if sys.version_info[0] > 2 else '\n'
+                lily_path = text(subprocess.check_output(['which', 'lilypond']).strip())
+                version = text(subprocess.check_output([lily_path, '--version'])).split(split_char)[0]
+                lily_verzh = version[version.find('LilyPond') + 9:]
             except OSError:
                 return ('lilypond', '2.16.0')  # TODO: what a terrible hack
 
