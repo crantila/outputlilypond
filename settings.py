@@ -4,7 +4,7 @@
 # Filename: settings.py
 # Purpose: Manages the runtime settings for OutputLilyPond
 #
-# Copyright (C) 2012, 2013, 2014 Christopher Antila
+# Copyright (C) 2012, 2013, 2014, 2016 Christopher Antila, Alexander Morgan
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -26,6 +26,12 @@ outputlilypond, along with various internally-used functions.
 
 from subprocess import Popen, PIPE  # for running LilyPond on Linux
 from platform import system as which_os
+# For python 2 and 3 compatibility:
+import sys
+if sys.version_info[0] > 2:
+    text = str
+else:
+    text = unicode
 
 
 class LilyPondSettings:
@@ -88,7 +94,7 @@ class LilyPondSettings:
         if setting_name in self._secret_settings:
             self._secret_settings[setting_name] = setting_value
         else:
-            raise KeyError(u'Setting does not exist: ' + unicode(setting_name))
+            raise KeyError(u'Setting does not exist: ' + text(setting_name))
 
     def get_property(self, setting_name):
         """
