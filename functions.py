@@ -4,7 +4,7 @@
 # Filename: functions.py
 # Purpose: Converter functions used by outputlilypond.
 #
-# Copyright (C) 2012, 2013, 2014 Christopher Antila
+# Copyright (C) 2012, 2013, 2014, 2016 Christopher Antila, Alexander Morgan
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -29,7 +29,12 @@ from itertools import repeat
 from music21 import clef, duration, chord, note, key, meter, layout, expressions, humdrum, bar, \
     stream, instrument, tempo, converter, metadata, text
 from outputlilypond import problems, settings
-
+# For python 2 and 3 compatibility:
+import sys
+if sys.version_info[0] > 2:
+    text = str
+else:
+    text = unicode
 
 """
 Clef-to-string equivalencies used by :func:`clef_to_lily`.
@@ -111,7 +116,7 @@ def clef_to_lily(the_clef, append=u'\n', invisible=False):
     try:
         return post + CLEF_DICT[type(the_clef)] + append
     except KeyError:
-        raise problems.UnidentifiedObjectError('Clef type not recognized: ' + unicode(the_clef))
+        raise problems.UnidentifiedObjectError('Clef type not recognized: ' + text(the_clef))
 
 
 def barline_to_lily(barline):
@@ -169,8 +174,8 @@ def duration_to_lily(dur, known_tuplet=False):
         if len(dur.components) > 1:
             # We have multiple components
             raise problems.ImpossibleToProcessError('Cannot process durations with ' +
-                'multiple components (received ' + unicode(dur.components) +
-                ' for quarterLength of ' + unicode(dur.quarterLength) + ')')
+                'multiple components (received ' + text(dur.components) +
+                ' for quarterLength of ' + text(dur.quarterLength) + ')')
         elif known_tuplet:
             # We have part of a tuple. This isn't necessarily a problem; we'll
             # assume we are given this by process_measure() and that it knows
@@ -219,7 +224,7 @@ def octave_num_to_lily(num):
     try:
         return OCTAVE_DICT[num]
     except KeyError:
-        raise problems.UnidentifiedObjectError('Octave out of range: ' + unicode(num))
+        raise problems.UnidentifiedObjectError('Octave out of range: ' + text(num))
 
 
 def pitch_to_lily(the_pitch, include_octave=True):
@@ -311,7 +316,7 @@ def note_to_lily(the_note, known_tuplet=False):
             post.append(u'~')
 
     if hasattr(the_note, 'lily_markup'):
-        post.append(unicode(the_note.lily_markup))
+        post.append(text(the_note.lily_markup))
 
     return u''.join(post)
 
@@ -384,8 +389,8 @@ def measure_to_lily(meas, incomplete=False):
             elif obj.duration.tuplets is not None and len(obj.duration.tuplets) > 0:
                 number_of_tuplet_components = obj.duration.tuplets[0].numberNotesActual
                 in_the_space_of = obj.duration.tuplets[0].numberNotesNormal
-                post.extend([u'\\times ', unicode(in_the_space_of), u'/',
-                    unicode(number_of_tuplet_components), u' { ',
+                post.extend([u'\\times ', text(in_the_space_of), u'/',
+                    text(number_of_tuplet_components), u' { ',
                     note_to_lily(obj, True), u" "])
                 # For every tuplet component...
                 for _ in repeat(None, number_of_tuplet_components - 1):
@@ -410,8 +415,8 @@ def measure_to_lily(meas, incomplete=False):
             if invisible:
                 post.append(u"\\once \\override Staff.TimeSignature #'transparent = ##t\n\t")
             post.extend([u"\\time ",
-                unicode(obj.beatCount), "/",
-                unicode(obj.denominator), u"\n\t"])
+                text(obj.beatCount), "/",
+                text(obj.denominator), u"\n\t"])
         # Key Signature
         elif isinstance(obj, key.KeySignature):
             pitch_and_mode = obj.pitchAndMode
@@ -542,18 +547,18 @@ def metadata_to_lily(metad, setts=None):
 
     if metad.composer is not None:
         post.extend([u'\tcomposer = \\markup{ "', metad.composer, u'" }\n'])
-    if u'None' != unicode(metad.date):
-        post.extend([u'\tdate = "', unicode(metad.date), u'"\n'])
+    if u'None' != text(metad.date):
+        post.extend([u'\tdate = "', text(metad.date), u'"\n'])
     if metad.movementName is not None:
         if None != metad.movementNumber:
             post.extend([u'\tsubtitle = \\markup{ "',
-                         unicode(metad.movementNumber), u': ',
+                         text(metad.movementNumber), u': ',
                          metad.movementName, u'" }\n'])
         else:
             post.extend([u'\tsubtitle = \\markup{ "',
                          metad.movementName, u'" }\n'])
     if metad.opusNumber is not None:
-        post.extend([u'\topus = "', unicode(metad.opusNumber), u'"\n'])
+        post.extend([u'\topus = "', text(metad.opusNumber), u'"\n'])
     if metad.title is not None:
         if metad.alternativeTitle is not None:
             post.extend([u'\ttitle = \\markup{ \"', metad.title,
@@ -656,7 +661,7 @@ def part_to_lily(part, setts):
                 pass
                 #msg = u'Unknown object in Stream; type is %s.' % type(thing)
                 #print(msg)  # DEBUG
-                #raise UnidentifiedObjectError(msg + unicode(thing))
+                #raise UnidentifiedObjectError(msg + text(thing))
     # finally, to close the part, join, and return!
     post.append(u"}\n")
     return u''.join(post)
