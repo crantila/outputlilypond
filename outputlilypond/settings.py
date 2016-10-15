@@ -4,7 +4,8 @@
 # Filename: settings.py
 # Purpose: Manages the runtime settings for OutputLilyPond
 #
-# Copyright (C) 2012, 2013, 2014, 2016 Christopher Antila, Alexander Morgan
+# Copyright (C) 2012, 2013, 2014, 2016 Christopher Antila
+# Copyright (C) 2016 Alexander Morgan
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as

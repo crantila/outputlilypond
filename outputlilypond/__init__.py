@@ -4,7 +4,7 @@
 # Filename: __init__.py
 # Purpose: Init file for outputlilypond
 #
-# Copyright (C) 2012, 2013, 2014 Christopher Antila
+# Copyright (C) 2012, 2013, 2014, 2016 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -22,13 +22,3 @@
 """
 Init file for outputlilypond.
 """
-
-# Ensure we can import "outputlilypond"
-import imp
-try:
-    imp.find_module(u'outputlilypond')
-except ImportError:
-    import sys
-    sys.path.insert(0, u'..')
-
-from outputlilypond.__main__ import run_lilypond, process_score

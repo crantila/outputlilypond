@@ -4,7 +4,8 @@
 # Filename: functions.py
 # Purpose: Converter functions used by outputlilypond.
 #
-# Copyright (C) 2012, 2013, 2014, 2016 Christopher Antila, Alexander Morgan
+# Copyright (C) 2012, 2013, 2014, 2016 Christopher Antila
+# Copyright (C) 2016 Alexander Morgan
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -159,6 +160,7 @@ def duration_to_lily(dur, known_tuplet=False):
         ``False``, since this requires a ``\\tuplet`` command in LilyPond.
     :raises: :exc:`ImpossibleToProcessError` if ``dur.quarterLength == 0.0`` is ``True``, since
         LilyPond has no zero-duration duration.
+    :raises: :exc:`ImpossibleToProcessError` if :mod:`music21` cannot process the duration.
     """
 
     # Every Duration should actually have some duration.
@@ -168,15 +170,14 @@ def duration_to_lily(dur, known_tuplet=False):
 
     # First of all, we can't deal with tuplets or multiple-component durations
     # in this method. We need process_measure() to help.
-    if dur.tuplets is not ():
-        # We know either there are multiple components or we have part of a
-        # tuplet, we we need to find out which.
-        if len(dur.components) > 1:
-            # We have multiple components
-            raise problems.ImpossibleToProcessError('Cannot process durations with ' +
-                'multiple components (received ' + text(dur.components) +
-                ' for quarterLength of ' + text(dur.quarterLength) + ')')
-        elif known_tuplet:
+    try:
+        if hasattr(dur, 'isComplex') and dur.isComplex:
+            raise problems.ImpossibleToProcessError('Cannot process durations with multiple components')
+    except duration.DurationException:
+        raise problems.ImpossibleToProcessError('music21 cannot process this duration')
+
+    if hasattr(dur, 'tuplets') and dur.tuplets:
+        if known_tuplet:
             # We have part of a tuple. This isn't necessarily a problem; we'll
             # assume we are given this by process_measure() and that it knows
             # what's going on. But, in tuplets, the quarterLength doesn't match
@@ -199,8 +200,12 @@ def duration_to_lily(dur, known_tuplet=False):
                 post = DURATION_DICT[durat]
                 break
         # For every dot in this Duration, append a '.' to "post"
-        for _ in repeat(None, dur.dots):
-            post += u'.'
+        try:
+            for _ in repeat(None, dur.dots):
+                post += u'.'
+        except duration.DurationException:
+            raise problems.ImpossibleToProcessError('music21 cannot process this duration')
+
         return post
 
 
@@ -300,7 +305,7 @@ def note_to_lily(the_note, known_tuplet=False):
         post.append(pitch_to_lily(the_note.pitch))
 
     # Find the duration(s)
-    if len(the_note.duration.components) > 1:
+    if the_note.duration.isComplex:
         post.extend([duration_to_lily(the_note.duration.components[0], known_tuplet), u'~ '])
         # We have a multiple-part duration
         for component in the_note.duration.components[1:]:
@@ -386,7 +391,7 @@ def measure_to_lily(meas, incomplete=False):
                 else:
                     post.extend([u'R', duration_to_lily(obj.duration), u' '])
             # Is it the start of a tuplet?
-            elif obj.duration.tuplets is not None and len(obj.duration.tuplets) > 0:
+            elif obj.duration.tuplets:
                 number_of_tuplet_components = obj.duration.tuplets[0].numberNotesActual
                 in_the_space_of = obj.duration.tuplets[0].numberNotesNormal
                 post.extend([u'\\times ', text(in_the_space_of), u'/',
@@ -755,36 +760,3 @@ def stream_to_lily(the_stream, setts, the_index=None):
         return (the_index, post)
     else:
         return post
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

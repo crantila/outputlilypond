@@ -4,7 +4,7 @@
 # Filename: unit_tests.py
 # Purpose: Unit tests for OutputLilyPond
 #
-# Copyright (C) 2012, 2013, 2014 Christopher Antila
+# Copyright (C) 2012, 2013, 2014, 2016 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -25,6 +25,7 @@ Unit tests for the "outputlilypond" module.
 
 import unittest
 import mock
+import pytest
 from music21 import clef, bar, duration, note, pitch, tie, chord, metadata
 from outputlilypond import functions, problems, settings
 
@@ -34,57 +35,33 @@ from outputlilypond import functions, problems, settings
 # pylint: disable=R0904
 
 
-class TestOctaveNumToLily(unittest.TestCase):
-    def test_octave_num_to_lily_1(self):
-        self.assertRaises(problems.UnidentifiedObjectError, functions.octave_num_to_lily, -10)
+def test_octave_num_works():
+    """octave_num_to_lily() when it works"""
+    assert functions.octave_num_to_lily(0) == u',,,'
+    assert functions.octave_num_to_lily(1) == u',,'
+    assert functions.octave_num_to_lily(2) == u','
+    assert functions.octave_num_to_lily(3) == u''
+    assert functions.octave_num_to_lily(4) == u"'"
+    assert functions.octave_num_to_lily(5) == u"''"
+    assert functions.octave_num_to_lily(6) == u"'''"
+    assert functions.octave_num_to_lily(7) == u"''''"
+    assert functions.octave_num_to_lily(8) == u"'''''"
+    assert functions.octave_num_to_lily(9) == u"''''''"
+    assert functions.octave_num_to_lily(10) == u"'''''''"
+    assert functions.octave_num_to_lily(11) == u"''''''''"
+    assert functions.octave_num_to_lily(12) == u"'''''''''"
 
-    def test_octave_num_to_lily_2(self):
-        self.assertRaises(problems.UnidentifiedObjectError, functions.octave_num_to_lily, -1)
 
-    def test_octave_num_to_lily_3(self):
-        self.assertEqual(functions.octave_num_to_lily(0), u',,,')
-
-    def test_octave_num_to_lily_4(self):
-        self.assertEqual(functions.octave_num_to_lily(1), u',,')
-
-    def test_octave_num_to_lily_5(self):
-        self.assertEqual(functions.octave_num_to_lily(2), u',')
-
-    def test_octave_num_to_lily_6(self):
-        self.assertEqual(functions.octave_num_to_lily(3), u'')
-
-    def test_octave_num_to_lily_7(self):
-        self.assertEqual(functions.octave_num_to_lily(4), u"'")
-
-    def test_octave_num_to_lily_8(self):
-        self.assertEqual(functions.octave_num_to_lily(5), u"''")
-
-    def test_octave_num_to_lily_9(self):
-        self.assertEqual(functions.octave_num_to_lily(6), u"'''")
-
-    def test_octave_num_to_lily_10(self):
-        self.assertEqual(functions.octave_num_to_lily(7), u"''''")
-
-    def test_octave_num_to_lily_11(self):
-        self.assertEqual(functions.octave_num_to_lily(8), u"'''''")
-
-    def test_octave_num_to_lily_12(self):
-        self.assertEqual(functions.octave_num_to_lily(9), u"''''''")
-
-    def test_octave_num_to_lily_13(self):
-        self.assertEqual(functions.octave_num_to_lily(10), u"'''''''")
-
-    def test_octave_num_to_lily_14(self):
-        self.assertEqual(functions.octave_num_to_lily(11), u"''''''''")
-
-    def test_octave_num_to_lily_15(self):
-        self.assertEqual(functions.octave_num_to_lily(12), u"'''''''''")
-
-    def test_octave_num_to_lily_16(self):
-        self.assertRaises(problems.UnidentifiedObjectError, functions.octave_num_to_lily, 13)
-
-    def test_octave_num_to_lily_17(self):
-        self.assertRaises(problems.UnidentifiedObjectError, functions.octave_num_to_lily, 128)
+def test_octave_num_breaks():
+    """octave_num_to_lily() when it doesn't work"""
+    with pytest.raises(problems.UnidentifiedObjectError):
+        functions.octave_num_to_lily(-10)
+    with pytest.raises(problems.UnidentifiedObjectError):
+        functions.octave_num_to_lily(-1)
+    with pytest.raises(problems.UnidentifiedObjectError):
+        functions.octave_num_to_lily(13)
+    with pytest.raises(problems.UnidentifiedObjectError):
+        functions.octave_num_to_lily(128)
 
 
 class TestPitchToLily(unittest.TestCase):
@@ -161,13 +138,8 @@ class TestDurationToLily(unittest.TestCase):
         self.assertEqual(functions.duration_to_lily(duration.Duration(0.12109375)), '64....')
 
     def test_duration_to_lily_17(self):
-        # This should be rounded to qL==8.0 ... but I don't know how to make a
-        # single-component duration with this qL, so I can't run this test as it
-        # gets rounded, only as it produces an error.
-        #self.assertEqual(_functions.duration_to_lily(duration.Duration(7.99609375)), '\\breve')
-        self.assertRaises(problems.ImpossibleToProcessError,
-                          functions.duration_to_lily,
-                          duration.Duration(7.99609375))
+        with pytest.raises(problems.ImpossibleToProcessError):
+            functions.duration_to_lily(duration.Duration(7.99609375))
 
     def test_duration_to_lily_18(self):
         # These take multiple Note objects, and as such cannot be portrayed by
@@ -177,14 +149,12 @@ class TestDurationToLily(unittest.TestCase):
                           duration.Duration(16.1))
 
     def test_duration_to_lily_19(self):
-        self.assertRaises(problems.ImpossibleToProcessError,
-                          functions.duration_to_lily,
-                          duration.Duration(25.0))
+        with pytest.raises(problems.ImpossibleToProcessError):
+            functions.duration_to_lily(duration.Duration(25.0))
 
     def test_duration_to_lily_20(self):
-        self.assertRaises(problems.ImpossibleToProcessError,
-                          functions.duration_to_lily,
-                          duration.Duration(0.01268128))
+        with pytest.raises(problems.ImpossibleToProcessError):
+            functions.duration_to_lily(duration.Duration(0.01268128))
 
     def test_duration_to_lily_21(self):
         # tuplet component--shouldn't work
@@ -205,6 +175,11 @@ class TestDurationToLily(unittest.TestCase):
     def test_duration_to_lily_24(self):
         expected = u"16."
         actual = functions.duration_to_lily(duration.Duration(0.375))
+        self.assertEqual(actual, expected)
+
+    def test_duration_to_lily_25(self):
+        expected = u"1"
+        actual = functions.duration_to_lily(duration.DurationTuple('whole', 0, 4.0))
         self.assertEqual(actual, expected)
 
 
@@ -657,14 +632,3 @@ class TestMetadataToLily(unittest.TestCase):
         self.assertEqual(1, mock_title.call_count)
         self.assertEqual(0, mock_alt_title.call_count)
         self.assertEqual(expected, actual)
-
-
-# Define test suites
-OCTAVENUM_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestOctaveNumToLily)
-PITCH_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestPitchToLily)
-DURATION_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDurationToLily)
-NOTE_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestNoteToLily)
-BARLINE_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestBarlineToLily)
-CLEF_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestClefToLily)
-CHORD_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestChordMaker)
-METADATA_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestMetadataToLily)

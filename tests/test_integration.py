@@ -4,7 +4,7 @@
 # Filename: integration_tests.py
 # Purpose: Integration tests for outputlilypond
 #
-# Copyright (C) 2012, 2013, 2014 Christopher Antila
+# Copyright (C) 2012, 2013, 2014, 2016 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -26,10 +26,35 @@
 # pylint: disable=R0904
 
 import unittest
-from music21 import stream, key, note, meter, converter
+from music21 import stream, key, note, meter, converter, note, key, clef, duration
 from outputlilypond.functions import measure_to_lily, stream_to_lily
-from outputlilypond.test_corpus import process_measure_unit
 from outputlilypond.settings import LilyPondSettings
+
+
+# Everything in the Measure should be invisible... we have only one Rest and one
+# TimeSignature
+invisibility_1 = stream.Measure()
+invisibility_1.append(meter.TimeSignature('4/4'))
+invisibility_1.append(note.Rest(quarterLength=4.0))
+invisibility_1.lily_invisible = True
+
+# Everything in the Measure should be invisible... we have a Rest, a
+# TimeSignature, and a KeySignature
+invisibility_2 = stream.Measure()
+invisibility_2.append(meter.TimeSignature('4/4'))
+invisibility_2.append(key.KeySignature(5))
+invisibility_2.append(note.Rest(quarterLength=4.0))
+invisibility_2.lily_invisible = True
+
+# Everything in the Measure should be invisible... we have a Rest, a
+# TimeSignature, a KeySignature, and a Clef
+invisibility_3 = stream.Measure()
+invisibility_3.append(meter.TimeSignature('4/4'))
+invisibility_3.append(key.KeySignature(5))
+invisibility_3.append(clef.TrebleClef())
+invisibility_3.append(note.Rest(quarterLength=4.0))
+invisibility_3.lily_invisible = True
+
 
 
 class TestMeasureMaker(unittest.TestCase):
@@ -43,25 +68,41 @@ class TestMeasureMaker(unittest.TestCase):
 
     def test_some_tuplets_1(self):
         # Complete measure starts with tuplets, filled with rests
+        measure_contents = [
+            note.Note('C4', quarterLength=0.25),
+            note.Note('D4', quarterLength=0.25),
+            note.Note('E4', quarterLength=0.25),
+            note.Rest(quarterLength=0.5),
+            note.Rest(quarterLength=1.0),
+            note.Rest(quarterLength=2.0),
+        ]
+        measure_contents[0].duration.tuplets = (duration.Tuplet(3, 2, '16th'),)
+        measure_contents[1].duration.tuplets = (duration.Tuplet(3, 2, '16th'),)
+        measure_contents[2].duration.tuplets = (duration.Tuplet(3, 2, '16th'),)
         test_in1 = stream.Measure()
         test_in1.timeSignature = meter.TimeSignature('4/4')
-        test_in1.append(note.Note('C4', quarterLength=0.16666))
-        test_in1.append(note.Note('D4', quarterLength=0.16666))
-        test_in1.append(note.Note('E4', quarterLength=0.16666))
-        test_in1.append(note.Rest(quarterLength=0.5))
-        test_in1.append(note.Rest(quarterLength=1.0))
-        test_in1.append(note.Rest(quarterLength=2.0))
+        for thing in measure_contents:
+            test_in1.append(thing)
+
         expect = u"\t\\time 4/4\n\t\\times 2/3 { c'16 d'16 e'16 } r8 r4 r2 |\n"
         actual = measure_to_lily(test_in1)
         self.assertEqual(actual, expect)
 
     def test_some_tuplets_2(self):
         # Partial measure starts with tuplets (multiple components)
+        measure_contents = [
+            note.Note('C4', quarterLength=0.25),
+            note.Note('D4', quarterLength=0.25),
+            note.Note('E4', quarterLength=0.25),
+        ]
+        measure_contents[0].duration.tuplets = (duration.Tuplet(3, 2, '16th'),)
+        measure_contents[1].duration.tuplets = (duration.Tuplet(3, 2, '16th'),)
+        measure_contents[2].duration.tuplets = (duration.Tuplet(3, 2, '16th'),)
         test_in1 = stream.Measure()
         test_in1.timeSignature = meter.TimeSignature('4/4')
-        test_in1.append(note.Note('C4', quarterLength=0.16666))
-        test_in1.append(note.Note('D4', quarterLength=0.16666))
-        test_in1.append(note.Note('E4', quarterLength=0.16666))
+        for thing in measure_contents:
+            test_in1.append(thing)
+
         expect = """\t\\partial 8
 \t\\time 4/4
 \t\\times 2/3 { c'16 d'16 e'16 } |
@@ -94,7 +135,7 @@ class TestMeasureMaker(unittest.TestCase):
     def test_invisibility_1(self):
         # test the .lily_invisible property, which should cause everything in a Measure to have
         # the #'transparent property set to ##t
-        actual = measure_to_lily(process_measure_unit.invisibility_1)
+        actual = measure_to_lily(invisibility_1)
         expect = u'''\t\\stopStaff
 \t\\once \\override Staff.TimeSignature #'transparent = ##t
 \t\\time 4/4
@@ -106,7 +147,7 @@ class TestMeasureMaker(unittest.TestCase):
     def test_invisibility_2(self):
         # test the .lily_invisible property, which should cause everything in a Measure to have
         # the #'transparent property set to ##t
-        actual = measure_to_lily(process_measure_unit.invisibility_2)
+        actual = measure_to_lily(invisibility_2)
         expect = '''\t\\stopStaff
 \t\\once \\override Staff.TimeSignature #'transparent = ##t
 \t\\time 4/4
@@ -120,7 +161,7 @@ class TestMeasureMaker(unittest.TestCase):
     def test_invisibility_3(self):
         # test the .lily_invisible property, which should cause everything in a Measure to have
         # the #'transparent property set to ##t
-        actual = measure_to_lily(process_measure_unit.invisibility_3)
+        actual = measure_to_lily(invisibility_3)
         expect = '''\t\\stopStaff
 \t\\once \\override Staff.TimeSignature #'transparent = ##t
 \t\\time 4/4
@@ -213,10 +254,3 @@ class TestProcessStreamPart(unittest.TestCase):
 }
 """
         self.assertEqual(actual, expect)
-
-
-#-------------------------------------------------------------------------------
-# Definitions
-#-------------------------------------------------------------------------------
-MEASURE_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestMeasureMaker)
-STREAM_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestProcessStreamPart)

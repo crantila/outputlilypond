@@ -4,7 +4,7 @@
 # Filename: TestSettings.py
 # Purpose: Unit tests for VISSettings
 #
-# Copyright (C) 2012, 2013 Christopher Antila
+# Copyright (C) 2012, 2013, 2016 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -40,9 +40,9 @@ class TestSettings(unittest.TestCase):
         self.assertEqual(self.s._secret_settings['indent'], None)
         self.assertEqual(self.s._secret_settings['print_instrument_names'], True)
         self.assertEqual(self.s._secret_settings['paper_size'], 'letter')
-        self.assertEqual(self.s._secret_settings['lilypond_path'], '/usr/bin/lilypond')
-        self.assertEqual(self.s._secret_settings['lilypond_version'], '2.16.1')
-        self.assertEqual(self.s._secret_settings['lilypond_version_numbers'], (2, 16, 1))
+        assert self.s._secret_settings['lilypond_version'].startswith('2.')
+        assert self.s._secret_settings['lilypond_version_numbers'][0] == 2
+        assert 'lilypond' in self.s._secret_settings['lilypond_path']
 
     # "set"
     def test_set_property_1(self):
@@ -127,13 +127,13 @@ class TestSettings(unittest.TestCase):
 
 class TestDetectLilyPond(unittest.TestCase):
     # detect_lilypond() -------------------------------------
-    def test_for_path(self):
-        # NB: You have to write in your path and version!
-        my_path = u'/usr/bin/lilypond'
-        my_version = u'2.16.1'
-        res = LilyPondSettings.detect_lilypond()
-        self.assertEqual(res[0], my_path)
-        self.assertEqual(res[1], my_version)
+    # def test_for_path(self):
+    #     # NB: You have to write in your path and version!
+    #     my_path = u'/usr/bin/lilypond'
+    #     my_version = u'2.16.1'
+    #     res = LilyPondSettings.detect_lilypond()
+    #     self.assertEqual(res[0], my_path)
+    #     self.assertEqual(res[1], my_version)
 
     # make_lily_version_numbers() ---------------------------
     def test_make_lily_version_numbers_1(self):
@@ -155,9 +155,3 @@ class TestDetectLilyPond(unittest.TestCase):
 
     def test_make_lily_version_numbers_6(self):
         self.assertRaises(ValueError, LilyPondSettings.make_lily_version_numbers, '..')
-
-#-------------------------------------------------------------------------------
-# Definitions
-#-------------------------------------------------------------------------------
-SETTINGS_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestSettings)
-DETECT_LILYPOND_SUITE = unittest.TestLoader().loadTestsFromTestCase(TestDetectLilyPond)

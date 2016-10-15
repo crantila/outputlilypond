@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #--------------------------------------------------------------------------------------------------
-# Filename: TestProcessStream.py
-# Purpose: Integration Tests for _process_stream()
+# Filename: test_stream_to_lily.py
+# Purpose: Integration Tests for stream_to_lily().
 #
-# Copyright (C) 2012, 2013 Christopher Antila
+# Copyright (C) 2012, 2013, 2016 Christopher Antila
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -21,19 +21,19 @@
 #--------------------------------------------------------------------------------------------------
 
 import unittest
-from OutputLilyPond import _process_stream
-from LilyPondSettings import LilyPondSettings
+from outputlilypond.functions import stream_to_lily
+from outputlilypond.settings import LilyPondSettings
 from music21 import converter
 
 
-class Test_Process_Stream_Part(unittest.TestCase):
+class TestStreamToLilyPart(unittest.TestCase):
     # NOTE: We have to pull a bit of trickery here, because there is some
     # randomness involved in part names.
     def test_first_measures_of_bach(self):
         # first two measures of soprano part
         the_settings = LilyPondSettings()
         the_score = converter.parse('test_corpus/bwv77.mxl')
-        actual = _process_stream(the_score.parts[0][:3], the_settings)
+        actual = stream_to_lily(the_score.parts[0][:3], the_settings)
         actual = actual[8:]  # remove the randomized part name
         expect = u""" =
 {
@@ -54,7 +54,7 @@ class Test_Process_Stream_Part(unittest.TestCase):
         # first three measures of highest part
         the_settings = LilyPondSettings()
         the_score = converter.parse('test_corpus/Jos2308.krn')
-        actual = _process_stream(the_score.parts[0][:12], the_settings)
+        actual = stream_to_lily(the_score.parts[0][:12], the_settings)
         actual = actual[8:]  # remove the randomized part name
         expect = u""" =
 {
@@ -67,7 +67,3 @@ class Test_Process_Stream_Part(unittest.TestCase):
 }
 """
         self.assertEqual(actual, expect)
-
-
-# Define test suites
-process_stream_part_suite = unittest.TestLoader().loadTestsFromTestCase(Test_Process_Stream_Part)
