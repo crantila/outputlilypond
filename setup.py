@@ -47,7 +47,7 @@ setup(
     # metadata for upload to PyPI
     author = 'Christopher Antila',
     author_email = 'christopher@antila.ca',
-    description = 'An HTTP server that executes Python code.',
+    description = 'Produce a LilyPond file from a music21 Score.',
     license = 'GPLv3+',
     keywords = 'lilypond',
     url = 'https://github.com/crantila/outputlilypond',
