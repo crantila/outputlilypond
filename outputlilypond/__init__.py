@@ -22,3 +22,5 @@
 """
 Init file for outputlilypond.
 """
+
+from outputlilypond.__main__ import run_lilypond, process_score
